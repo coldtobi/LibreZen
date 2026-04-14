@@ -106,7 +106,7 @@ class ZendureBridge:
         # schedule get_all_properties in a few seconds, to allow everything to be ready.
         if self._get_all_props_timer:
             self._get_all_props_timer.cancel()
-        self._get_all_props_timer = threading.Timer(2.0, self.get_all_properties)
+        self._get_all_props_timer = threading.Timer(1.0, self.get_all_properties)
         self._get_all_props_timer.start()
 
     def _on_disconnect(self, _client: mqtt.Client, _userdata: Any, rc: int) -> None:

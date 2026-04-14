@@ -39,6 +39,9 @@ class HAPublisher:
         self.zendevice = zendevice
         self.zencontrol = zencontrol
 
+        # keeping track of discovery / availability sent, to judge whether we are ready.
+        self.discovery_mid : list[int] = []
+
         # client talks to the homeassistant mqtt server.
         self._client = mqtt.Client(client_id=mqttconfig.client_id)
         self._client.username_pw_set(mqttconfig.ha_username, mqttconfig.ha_password)
@@ -47,6 +50,7 @@ class HAPublisher:
         self._client.on_connect_fail = self._on_connect_fail
         self._client.on_disconnect = self._on_disconnect
         self._client.on_message = self._on_message
+        self._client.on_publish = self._on_publish
 
         # Subscribe pattern covering all device topics which can command things
         self._subscribe_topics: list[str] = []
@@ -58,6 +62,7 @@ class HAPublisher:
 
     def _on_connect(self, client: mqtt.Client, _userdata: Any, _flags: Any, rc: int) -> None:
 
+        self.discovery_mid.clear()
         if rc != 0:
             logger.error("MQTT connect failed, rc=%d", rc)
             return
@@ -73,17 +78,25 @@ class HAPublisher:
             self.publish_ha_discovery(haentity)
             self.publish_availablity(haentity, self.zencontrol.get_zendure_state())
 
-        self.is_ready = True
 
+    def _on_publish(self,_client: mqtt.Client, _userdata: Any, mid: int) -> None:
+        # Hack to get a "is_ready" signal - tracking all discovery/availability
+        # publications and be ready when all has been sent.
+        if mid in self.discovery_mid:
+            self.discovery_mid.remove(mid)
+            if not self.discovery_mid:
+                self.is_ready = True
 
     def _on_connect_fail(self, client: mqtt.Client, _userdata: Any) -> None:
         logger.warning("Connect to MQTT broker %s:%d failed.", self.mqttconfig.ha_broker, self.mqttconfig.ha_port)
+        self.discovery_mid.clear()
 
 
     def _on_disconnect(self, client: mqtt.Client, _userdata: Any, rc: int) -> None:
         if rc != 0:
             logger.warning("Unexpected disconnect (rc=%d), paho will reconnect", rc)
         self.is_ready = False
+        self.discovery_mid.clear()
 
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, message: mqtt.MQTTMessage) -> None:
@@ -116,10 +129,11 @@ class HAPublisher:
 
     def publish_ha_discovery(self, haentity: HAEntity) -> None:
         logger.info("sending discovery for %s", haentity.name)
-        self._client.publish(
+        mid = self._client.publish(
             haentity.get_discovery_topic(self.zencontrol),
             haentity.get_ha_json(self.zencontrol),
             retain=True)
+        self.discovery_mid.append(mid.mid)
 
     # Hilfsmethode um topics wieder im homeassistant zu löschen. muss vor dem umbennen aufgerufen werden.
     def unpublish_discoveries(self) -> None:
@@ -150,4 +164,5 @@ class HAPublisher:
         topic = haentity.get_availabilty_topic(self.zencontrol)
         payload = "online" if haentity.is_available(state, self.zencontrol) else "offline"
         logger.debug("Availabilty for %s is now %s", haentity.name, payload)
-        self._client.publish(topic, payload, retain=True)
+        mid = self._client.publish(topic, payload, retain=True)
+        self.discovery_mid.append(mid.mid)
