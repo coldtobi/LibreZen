@@ -42,9 +42,10 @@ class HANumberControl(HAControl):
             'min' : self.min,
             'max' : self.max,
             'step' : self.step,
-            'device_class' : self.device_class,
             'mode' : self.display_mode
         }
+        if self.device_class:
+            _extra['device_class'] = self.device_class
         return (_dict | _extra)
 
     def _get_command_properties(self, mqttpayload: bytes) -> dict[str, int] :
