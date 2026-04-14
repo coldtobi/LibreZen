@@ -85,7 +85,7 @@ class HAEntity:
         state is only a copy of the global states, changes to the state will be only temporary saved,
         as the device should confirm the new value via mqtt to make it "permamenet"
 
-        The lifetime of the temporary change will extended so that HAPublisher will detect the change and publish the value to homeassisten, though.
+        The lifetime of the temporary change will extended so that HAPublisher will detect the change and publish the value to homeassistant, though.
 
         To generate syntentic states, the "UpdateStateValue" protocol of ZendureController can be use to save values to the state object permanetly
         without the device needing to confirm the value.

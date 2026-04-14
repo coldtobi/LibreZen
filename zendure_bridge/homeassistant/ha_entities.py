@@ -43,20 +43,23 @@ HAENTITIES = [
     HASensor("Output To Home",           "output_home_power",    "W",     "power"),
 
     # Enum's
-    EnumSensor("Auto Model",                "auto_model",           "",      "enum", _PROPERTY_MAP_AUTO_MODELS),
+    EnumSensor("Auto Model RO",                "auto_model",           "",      "enum", _PROPERTY_MAP_AUTO_MODELS),
 
 #### CONTROLS (and if needed their Display-Sensors) ####
-#   HANumberControl(         name            field_name,            unit   min  max   step   device_class
-    HAOutputLimitControl("Output Limit",     "output_limit",         "W",    0, 800,     1,  "power"),
+#   HANumberControl(         name           field_name,            unit   min  max   step   device_class
+    HAOutputLimitControl("Output Limit",    "output_limit",         "W",    0, 800,     1,  "power"),
     HAInvMaxPowerControl("Legal Inverter Limit", "inverse_max_power","W",  100,1200,   100,  "power", display_mode="box", is_expert=True),
-    HASensor("Current Inverter Limit",       "inverse_max_power",    "W",                    "power"),
-    HASoCControl("min SoC",               "min_soc",              "%",    0,  50,     1,  "battery"),
-    HASoCControl("max SoC",               "soc_set",              "%",   70, 100,     1,  "battery"),
+    HASensor("Current Inverter Limit",      "inverse_max_power",    "W",                    "power"),
+    HASoCControl("min SoC",                 "min_soc",              "%",    0,  50,     1,  "battery"),
+    HASoCControl("max SoC",                 "soc_set",              "%",   70, 100,     1,  "battery"),
 ]
 
 
 def find_sensor_obj(field_name: str) -> HAEntity | None:
-    """ helper to find the HAEntity Object in the HAENTITIES list."""
+    """ helper to find the HAEntity Object in the HAENTITIES list.
+
+        if there are multiple entries for the field_name, only the first is found.
+    """
     for ent in HAENTITIES:
         if ent.field_name == field_name:
             return ent

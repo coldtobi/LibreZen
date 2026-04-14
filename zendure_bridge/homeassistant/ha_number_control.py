@@ -54,6 +54,7 @@ class HANumberControl(HAControl):
         }
         return _properties
 
+
     def handle_command(self,
                        mqttpayload: bytes, _zenstate: ZendureState,
                        zencontrol: ZendureController) -> None:

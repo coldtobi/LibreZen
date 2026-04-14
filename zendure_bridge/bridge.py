@@ -165,6 +165,7 @@ class ZendureBridge:
     # ------------------------------------------------------------------ #
 
     def write_property(self, properties: dict[str, Any], persistent: bool = False ) -> None:
+        """ Set a property in the device """
         # topic to send to:
         # "iot/<app_key>/<device_id>/properties/write"
         topic = ( "iot/"
@@ -221,7 +222,6 @@ class ZendureBridge:
     def get_zendure_state(self) -> ZendureState:
         """ get a (fresh) copy of the current state """
         return self.device.state
-
 
     def get_bridge_context(self) -> BridgeContext:
         return BridgeContext(self.config.zendure, self.config.homeassistant)
