@@ -7,6 +7,7 @@
 # (at your option) any later version.
 
 import logging
+logger = logging.getLogger(__name__)
 
 from typing import Any
 from dataclasses import dataclass
@@ -16,7 +17,6 @@ from ..zendure_protocols import ZendureController
 
 from .ha_control import HAControl
 
-logger = logging.getLogger(__name__)
 
 @dataclass
 class HANumberControl(HAControl):
@@ -59,7 +59,7 @@ class HANumberControl(HAControl):
         assert len(_keys) == 1 , "Property not found or duplicate defintion."
         # generate dict and assign mqtt payload value.
         value = int(mqttpayload.decode())
-        if not self.min < value < self.max:
+        if not self.min <= value <= self.max:
             raise(ValueError)
 
         _properties = {
@@ -78,8 +78,8 @@ class HANumberControl(HAControl):
         """
         try:
             if not self.is_syntetic:
-                _properties = self._get_command_properties(mqttpayload)
-                zencontrol.write_property(_properties)
+                properties = self._get_command_properties(mqttpayload)
+                zencontrol.write_property(properties)
             else:
                 value = int(mqttpayload.decode())
                 if not self.min < value < self.max:

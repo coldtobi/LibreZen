@@ -6,6 +6,9 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+import logging
+logger = logging.getLogger(__name__)
+
 from dataclasses import dataclass
 
 from ..device import ZendureState
@@ -22,9 +25,13 @@ class HAOutputLimitControl(HANumberControl):
     def handle_command(self, mqttpayload: bytes, _zenstate: ZendureState,
                        zencontrol: ZendureController) -> None:
 
-        _properties = self._get_command_properties(mqttpayload)
-        _properties["acMode"] = 2
-        zencontrol.write_property(_properties)
+        try:
+            _properties = self._get_command_properties(mqttpayload)
+            _properties["acMode"] = 2
+            zencontrol.write_property(_properties)
+        except ValueError:
+            logger.error(f"value %s for %s out of range: %d < xx < %d",
+                         mqttpayload.decode(), self.field_name, self.min, self.max)
 
     def is_available(self, state:ZendureState, zencontrol:ZendureController)->bool:
         if not super().is_available(state, zencontrol):
