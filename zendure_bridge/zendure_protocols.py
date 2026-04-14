@@ -42,6 +42,7 @@ class ZendureCurrentStateProvider(Protocol):
 
 
 class ZendureContextProvider(Protocol):
+    """ Provides the BridgeContext Object - to easily obtain configuration objects. """
     @abstractmethod
     def get_bridge_context(self) -> BridgeContext:
         ...

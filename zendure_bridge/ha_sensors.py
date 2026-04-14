@@ -46,6 +46,11 @@ class HAEntity:
         zenconfig = zencontrol.get_bridge_context().zenconfig
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/config"
 
+    def get_availabilty_topic(self, zencontrol: ZendureController) -> str:
+        haconfig = zencontrol.get_bridge_context().haconfig
+        zenconfig = zencontrol.get_bridge_context().zenconfig
+        return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/availability"
+
     def _build_ha_discovery_dict(self, zencontrol: ZendureController) -> dict[str, Any]:
         """ build a dict containing all information for homeassisent's discovery of an entity.
 
@@ -57,6 +62,7 @@ class HAEntity:
         _dict = {
             'name': self.name,
             'state_topic': self.get_state_topic(zencontrol),
+            'availability_topic': self.get_availabilty_topic(zencontrol),
             'unique_id': f"zendure_{zenconfig.device_id}_{self.field_name}",
             'device': {
                 "identifiers": [f"zendure_{zenconfig.device_id}"],
@@ -196,9 +202,7 @@ class HAOutputLimitControl(HANumberControl):
         _properties = self._get_command_properties(mqttpayload)
         _properties["acMode"] = 2
         zencontrol.write_property(_properties)
-        
-    def is_available(self, state: ZendureState, _zencontrol: ZendureController) -> bool:
-        return state.auto_model == 0
+
 
 @dataclass
 class HAInvMaxPowerControl(HANumberControl):
@@ -220,11 +224,8 @@ class HAInvMaxPowerControl(HANumberControl):
         if outputlimit.max != state.inverse_max_power:
             outputlimit.max = state.inverse_max_power
             zencontrol.update_ha_entity(outputlimit.field_name)
-            
-    def is_available(self, state: ZendureState, zencontrol: ZendureController) -> bool:
-        # FIXME 
-        return state.auto_model == 0
-            
+
+
 @dataclass
 class HASoCControl(HANumberControl):
     def get_value(self, state: ZendureState) -> int:
@@ -340,11 +341,11 @@ HAENTITIES = [
     PowerSensor("Power to Bat",             "output_pack_power",    "W",     "power"),
     PowerSensor("Power from Bat",           "pack_input_power",     "W",     "power"),
     SocSensor("Battery SoC",                "electric_level",       "%",     "battery"),
-    
+
     # Sensors Inverter Side
     PowerSensor("Output To Home",           "output_home_power",    "W",     "power"),
-    
-    # Enum's 
+
+    # Enum's
     EnumSensor("Auto Model",                "auto_model",           "",      "enum", _PROPERTY_MAP_AUTO_MODELS),
 
 #### CONTROLS ####

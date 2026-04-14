@@ -63,7 +63,9 @@ class HAPublisher:
             client.subscribe(topic)
 
         for haentity in HAENTITIES:
+            # send initial discovery and initial availability.
             self.publish_ha_discovery(haentity)
+            self.publish_availablity(haentity, self.zencontrol.get_zendure_state())
 
     def _on_connect_fail(self, client: mqtt.Client, _userdata: Any) -> None:
         logger.warning("Connect to MQTT broker %s:%d failed.", self.mqttconfig.ha_broker, self.mqttconfig.ha_port)
@@ -128,9 +130,21 @@ class HAPublisher:
     # Topic States #
     # -------------#
     def publish_state(self, haentity: HAEntity, state: ZendureState) -> None:
+        """ publish the state (the value) of an entity """
         logger.debug("sending state for %s, value %s", haentity.name, haentity.get_display_value(state))
         self._client.publish(
             haentity.get_state_topic(self.zencontrol),
             haentity.get_display_value(state),
             retain=False
         )
+
+
+    def publish_availablity(self, haentity: HAEntity, state: ZendureState) -> None:
+        """ publish availabiltiy of a state / control.
+
+            availabilty will only be published if it has changed since the last time, or if always=True
+        """
+        topic = haentity.get_availabilty_topic(self.zencontrol)
+        payload = "online" if haentity.is_available(state, self.zencontrol) else "offline"
+        logger.debug("Availabilty for %s is now %s", haentity.name)
+        self._client.publish(topic, payload, retain=True)

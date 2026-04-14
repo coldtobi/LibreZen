@@ -112,9 +112,9 @@ class ZendureBridge:
         logger.debug("  %s" , message.payload)
 
         changed = self.device.update_from_payload(topic, message.payload)
+        state = self.device.state
 
         if changed:
-            state = self.device.state
             logger.info(
                 "State: SoC=%d%% PV=%dW bat=%dW home=%dW grid=%dW limit=%dW",
                 state.electric_level,
@@ -133,6 +133,11 @@ class ZendureBridge:
             for haentity in HAENTITIES:
                 if haentity.has_changed(state):
                     self._hapublisher.publish_state(haentity, state)
+
+        # check if discoveries or availabilties needs updates.
+        for haentity in HAENTITIES:
+            if haentity.has_availability_changed(state, self):
+                self._hapublisher.publish_availablity(haentity, state)
 
 
     # ------------------------------------------------------------------ #

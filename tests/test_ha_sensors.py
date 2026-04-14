@@ -70,12 +70,13 @@ def test_hanumber_get_ha_json() -> None:
     assert result["device_class"] == "power"
     assert result["state_topic"] == sensor.get_state_topic(mock)
     assert result["command_topic"] == sensor.get_command_topic(mock)
+    assert result["availability_topic"] == sensor.get_availabilty_topic(mock)
     zen_device_id = mock.get_bridge_context().zenconfig.device_id
     assert result["unique_id"] == f"zendure_{zen_device_id}_solar_input_power"
     assert result["device"]["identifiers"] == [f"zendure_{zen_device_id}"]
 
     expected_keys = {
-        "name", "state_topic", "command_topic", "unique_id", "device",
+        "name", "availability_topic", "state_topic", "command_topic", "unique_id", "device",
         "unit_of_measurement", "min", "max", "step", "device_class"
     }
     assert result.keys() == expected_keys
@@ -99,18 +100,19 @@ def test_sensor_get_state_topic() -> None:
 def test_sensor_get_ha_json() -> None:
     sensor = HASensor("TestSensor", "solar_input_power", "W", "power")
     mock = BridgeMock()
+    zen_device_id = mock.get_bridge_context().zenconfig.device_id
 
     result = json.loads(sensor.get_ha_json(mock))
     assert result["name"] == "TestSensor"
     assert result["unit_of_measurement"] == "W"
     assert result["device_class"] == "power"
     assert result["state_topic"] == sensor.get_state_topic(mock)
-    zen_device_id = mock.get_bridge_context().zenconfig.device_id
+    assert result["availability_topic"] == sensor.get_availabilty_topic(mock)
     assert result["unique_id"] == f"zendure_{zen_device_id}_solar_input_power"
     assert result["device"]["identifiers"] == [f"zendure_{zen_device_id}"]
 
     expected_keys = {
-        "name", "state_topic", "unique_id", "device",
+        "name", "availability_topic", "state_topic", "unique_id", "device",
         "unit_of_measurement", "device_class"
     }
     assert result.keys() == expected_keys
