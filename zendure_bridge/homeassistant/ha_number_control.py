@@ -6,6 +6,8 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+import logging
+
 from typing import Any
 from dataclasses import dataclass
 
@@ -13,6 +15,8 @@ from ..device import ZendureState, _PROPERTY_MAP
 from ..zendure_protocols import ZendureController
 
 from .ha_control import HAControl
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class HANumberControl(HAControl):
@@ -44,28 +48,46 @@ class HANumberControl(HAControl):
         return (_dict | _extra)
 
     def _get_command_properties(self, mqttpayload: bytes) -> dict[str, int] :
-        """ map state's field_name to Zendure's property name and assign the value from the MQTT control payload. """
+        """ map state's field_name to Zendure's property name and assign the value from the MQTT control payload.
+
+        The value is clamped to self.min < value < self.max.
+         """
 
         # reverse dict lookup to determine the proper Zendure property for this Control.
         _keys = [ key for key,val in _PROPERTY_MAP.items() if val == self.field_name ]
         assert len(_keys) == 1 , "Property not found or duplicate defintion."
         # generate dict and assign mqtt payload value.
+        value = int(mqttpayload.decode())
+        if not self.min < value < self.max:
+            raise(ValueError)
+
         _properties = {
-            _keys[0]: int(mqttpayload.decode())
+            _keys[0]: value
         }
         return _properties
 
 
     def handle_command(self,
-                       mqttpayload: bytes, _zenstate: ZendureState,
+                       mqttpayload: bytes, zenstate: ZendureState,
                        zencontrol: ZendureController) -> None:
         """ Handle a numeric value sent from homeassistant to be sent to the zendure.
 
             This will just set the properties associated with the HAConrol, if some command
             needs extra properties to be set, needs to be overriden.
         """
-        _properties = self._get_command_properties(mqttpayload)
-        zencontrol.write_property(_properties)
+        try:
+            if not self.is_syntetic:
+                _properties = self._get_command_properties(mqttpayload)
+                zencontrol.write_property(_properties)
+            else:
+                value = int(mqttpayload.decode())
+                if not self.min < value < self.max:
+                    raise(ValueError)
+                zencontrol.update_state_value(self.field_name, value)
+                setattr(zenstate, self.field_name, value)
+        except ValueError:
+            logger.error(f"value %s for %s out of range: %d < xx < %d",
+                         mqttpayload.decode(), self.field_name, self.min, self.max)
 
     def is_available(self, _state: ZendureState, zencontrol: ZendureController) -> bool:
         # expert controls are available only if expert_mode has been configured.
