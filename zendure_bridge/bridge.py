@@ -187,8 +187,30 @@ class ZendureBridge:
             'timestamp': int(time.time() * 1000),
             'properties': properties
         }
+        self._client.publish(topic, json.dumps(payload,separators=(',', ':')))
 
-        self._client.publish(topic, json.dumps(payload))
+    def invoke_function(self, arguments: dict[str, Any], function: str) -> None:
+        """ Call the "invoke" RFC
+            arguments contain the parameters for the call, needs to be prepareed
+            by the caller.
+        """
+
+        # topic to send to:
+        # iot/<app_key>/<device_id>/function/invoke
+        topic = ( "iot/"
+          f"{self.config.zendure.app_key}/{self.config.zendure.device_id}"
+          "/function/invoke" )
+
+        self.lastMessageID += 1
+
+        payload = {
+            'arguments' : [arguments],
+            'deviceKey':  self.config.zendure.device_id,
+            'function':  function,
+            'messageId': self.lastMessageID,
+            'timestamp': int(time.time() * 1000)
+        }
+        self._client.publish(topic, json.dumps(payload,separators=(',', ':')))
 
 
     def get_all_properties(self) -> None:
@@ -212,9 +234,6 @@ class ZendureBridge:
                ]
         }
         self._client.publish(_topic, json.dumps(_dict))
-
-    def invoke_function(self, propetries: dict[str, Any]) -> None:
-        ...
 
     def update_state_value(self, field_name: str, value: int) -> None:
         """ allows updating the state object with a new value, thread safe. """

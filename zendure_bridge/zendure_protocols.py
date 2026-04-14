@@ -22,7 +22,7 @@ class ZendurePropertyWriter(Protocol):
 
 class ZendureCommandInvoker(Protocol):
     @abstractmethod
-    def invoke_function(self, propetries: dict[str, Any]) -> None:
+    def invoke_function(self, arguments: dict[str, Any], function: str) -> None:
         ...
 
 
