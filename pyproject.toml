@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "zen-bridge"
+version = "0.1.0"
+description = "Local MQTT bridge for Zendure SolarFlow – no cloud required"
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+authors = [
+    { name = "Tobias Frost", email = "tobi@coldtobi.de" }
+]
+requires-python = ">=3.11"
+
+# I'm prefering apt packages 
+# These are listed here for reference / non-Debian installs.
+dependencies = [
+    "paho-mqtt>=1.6",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Meilenstein 4: Regellogik & Preisoptimierung
+automation = [
+    "requests>=2.28",
+    "APScheduler>=3.10",
+]
+
+[project.scripts]
+zendure-bridge = "zendure_bridge.bridge:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

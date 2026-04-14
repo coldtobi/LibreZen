@@ -1,0 +1,37 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Credentials and local config (NEVER commit!)
+config.yaml
+.env
+*.secret
+
+# Eclipse / PyDev
+.project
+.pydevproject
+.settings/
+
+# Editor
+*~
+*.swp
+*.swo
+.idea/
+
+# Logs and data
+*.log
+*.csv
+*.db
+*.sqlite3
