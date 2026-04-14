@@ -218,7 +218,7 @@ class ZendureBridge:
         self.device.update_value(field_name, value)
 
     def get_zendure_state(self) -> ZendureState:
-        """ get a copy of the current state """
+        """ get a (fresh) copy of the current state """
         return self.device.state
 
 

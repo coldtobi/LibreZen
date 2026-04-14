@@ -226,6 +226,10 @@ class HAOutputLimitControl(HANumberControl):
         _properties["acMode"] = 2
         zencontrol.write_property(_properties)
 
+    def is_available(self, state:ZendureState, zencontrol:ZendureController)->bool:
+        if not super().is_available(state, zencontrol):
+            return False
+        return state.auto_model == 0
 
 @dataclass
 class HAInvMaxPowerControl(HANumberControl):
