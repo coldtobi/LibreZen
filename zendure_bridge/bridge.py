@@ -180,7 +180,7 @@ class ZendureBridge:
         else:
             properties['smartMode'] = 1
 
-        _dict = {
+        payload = {
             'messageId': self.lastMessageID,
             'product': self.config.zendure.product,
             'deviceId': self.config.zendure.device_id,
@@ -188,7 +188,8 @@ class ZendureBridge:
             'properties': properties
         }
 
-        self._client.publish(topic, json.dumps(_dict))
+        self._client.publish(topic, json.dumps(payload))
+
 
     def get_all_properties(self) -> None:
         """ get all properties from the device.
