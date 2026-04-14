@@ -29,7 +29,7 @@ import paho.mqtt.client as mqtt
 from . import __version__
 from .config import BridgeConfig
 from .config import load as load_config
-from .device import ZendureDevice
+from .device import ZendureDevice, ZendureState
 from .bridge_context import BridgeContext
 
 from .ha_publisher import HAPublisher
@@ -209,6 +209,11 @@ class ZendureBridge:
     def update_state_value(self, field_name: str, value: int) -> None:
         """ allows updating the state object with a new value, thread safe. """
         self.device.update_value(field_name, value)
+
+    def get_zendure_state(self) -> ZendureState:
+        """ get a copy of the current state """
+        return self.device.state
+
 
     def get_bridge_context(self) -> BridgeContext:
         return BridgeContext(self.config.zendure, self.config.homeassistant)

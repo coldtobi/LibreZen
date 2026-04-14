@@ -34,6 +34,9 @@ class BridgeMock():
     def update_ha_entity(self, field_name: str) -> None:
         pass
 
+    def get_zendure_state(self) -> ZendureState:
+        return self.device.state
+
     def get_bridge_context(self) -> BridgeContext:
         return BridgeContext(self.bridgeconfig.zendure, self.bridgeconfig.homeassistant)
 

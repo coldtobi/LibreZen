@@ -11,6 +11,8 @@ from abc import abstractmethod
 
 from zendure_bridge.ha_protocols import HomeAssistantUpdateEntity
 from zendure_bridge.bridge_context import BridgeContext
+from zendure_bridge.device import ZendureState
+
 
 class ZendurePropertyWriter(Protocol):
     """ This protocol is to invoke writing a property / state to the Zendure device without the HAEntity needing to know the device object."""
@@ -31,15 +33,26 @@ class ZendureUpdateStateValue(Protocol):
     def update_state_value(self, field_name: str, value: int) -> None:
         ...
 
+
+class ZendureCurrentStateProvider(Protocol):
+    """ This protocol gets a copy of the current ZendureState Object. """
+    @abstractmethod
+    def get_zendure_state(self) -> ZendureState:
+        ...
+
+
 class ZendureContextProvider(Protocol):
     @abstractmethod
     def get_bridge_context(self) -> BridgeContext:
         ...
 
-class ZendureController(ZendurePropertyWriter, 
-                        ZendureCommandInvoker, 
-                        ZendureUpdateStateValue, 
-                        HomeAssistantUpdateEntity, 
+
+
+class ZendureController(ZendurePropertyWriter,
+                        ZendureCommandInvoker,
+                        ZendureUpdateStateValue,
+                        HomeAssistantUpdateEntity,
+                        ZendureCurrentStateProvider,
                         ZendureContextProvider,
                         Protocol):
     ...
