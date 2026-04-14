@@ -22,6 +22,7 @@ import signal
 import sys
 import time
 import json
+import threading
 from typing import Any
 
 import paho.mqtt.client as mqtt
@@ -64,6 +65,8 @@ class ZendureBridge:
     """
 
     lastMessageID : int = 0  # Message counter for the chatting.
+    has_pending_changes: bool = False # Some changes could not be forwarded to ha_publish (because it was not ready)
+    _get_all_props_timer = None  # Timer to schedule "get_all_properties"
 
     def __init__(self, config: BridgeConfig) -> None:
         self.config = config
@@ -88,7 +91,7 @@ class ZendureBridge:
 
 
     # ------------------------------------------------------------------ #
-    # MQTT callbacks (run in paho's network thread)                        #
+    # MQTT callbacks (run in paho's network thread)                      #
     # ------------------------------------------------------------------ #
 
     def _on_connect(self, client: mqtt.Client, _userdata: Any, _flags: Any, rc: int) -> None:
@@ -100,12 +103,17 @@ class ZendureBridge:
             client.subscribe(topic)
             logger.info("Subscribed to %s", topic)
 
-        self.get_all_properties()
-
+        # schedule get_all_properties in a few seconds, to allow everything to be ready.
+        if self._get_all_props_timer:
+            self._get_all_props_timer.cancel()
+        self._get_all_props_timer = threading.Timer(2.0, self.get_all_properties)
+        self._get_all_props_timer.start()
 
     def _on_disconnect(self, _client: mqtt.Client, _userdata: Any, rc: int) -> None:
         if rc != 0:
             logger.warning("Unexpected disconnect (rc=%d), paho will reconnect", rc)
+        if self._get_all_props_timer:
+            self._get_all_props_timer.cancel()
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, message: mqtt.MQTTMessage) -> None:
         topic = message.topic
