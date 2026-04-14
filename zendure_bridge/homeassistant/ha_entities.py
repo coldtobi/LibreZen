@@ -30,16 +30,16 @@ HAENTITIES = [
     HASensor("Solar Input Power Input 1",  "solar_power_1",        "W",     "power"),
     HASensor("Solar Input Power Input 2",  "solar_power_2",        "W",     "power"),
     # Sensors Battery related
-    BatterySensor("Battery Power",          "battery_charge_power", "W",     "power"),
-    HASensor("Power to Bat",             "output_pack_power",    "W",     "power"),
-    HASensor("Power from Bat",           "pack_input_power",     "W",     "power"),
-    SocSensor("Battery SoC",                "electric_level",       "%",     "battery"),
+    BatterySensor("Battery Power",         "battery_charge_power", "W",     "power"),
+    HASensor("Power to Bat",               "output_pack_power",    "W",     "power"),
+    HASensor("Power from Bat",             "pack_input_power",     "W",     "power"),
+    SocSensor("Battery SoC",               "electric_level",       "%",     "battery"),
 
     # Sensors Inverter Side
-    HASensor("Output To Home",           "output_home_power",    "W",     "power"),
+    HASensor("Output To Home",             "output_home_power",    "W",     "power"),
 
     # Enum's
-    EnumSensor("Auto Model RO",                "auto_model",           "",      "enum", _PROPERTY_MAP_AUTO_MODELS),
+    EnumSensor("Auto Model RO",            "auto_model",           "",      "enum", _PROPERTY_MAP_AUTO_MODELS),
 
 #### CONTROLS (and if needed their Display-Sensors) ####
 #   HANumberControl(         name           field_name,            unit   min  max   step   device_class
@@ -48,7 +48,7 @@ HAENTITIES = [
     HASensor("Current Inverter Limit",      "inverse_max_power",    "W",                    "power"),
     HASoCControl("min SoC",                 "min_soc",              "%",    0,  50,     1,  "battery"),
     HASoCControl("max SoC",                 "soc_set",              "%",   70, 100,     1,  "battery"),
-    HAAutoMmodeSelCtrl("Auto Model Ctrl",        "auto_model",  _PROPERTY_MAP_AUTO_MODELS),
+    HAAutoMmodeSelCtrl("Auto Model Ctrl",   "auto_model",  _PROPERTY_MAP_AUTO_MODELS),
 
 # Syntetics for testing.
     HANumberControl("AutoModelProgram",     "auto_model_program",   "",     0,  2,      1,  "", display_mode="box", is_syntetic = True),

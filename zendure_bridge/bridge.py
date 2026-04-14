@@ -211,15 +211,10 @@ class ZendureBridge:
             arguments contain the parameters for the call, needs to be prepareed
             by the caller.
         """
-
-        # topic to send to:
-        # iot/<app_key>/<device_id>/function/invoke
         topic = ( "iot/"
           f"{self.config.zendure.app_key}/{self.config.zendure.device_id}"
           "/function/invoke" )
-
         self.lastMessageID += 1
-
         payload = {
             'arguments' : [arguments],
             'deviceKey':  self.config.zendure.device_id,
@@ -227,6 +222,7 @@ class ZendureBridge:
             'messageId': self.lastMessageID,
             'timestamp': int(time.time() * 1000)
         }
+        logger.debug("invoke_function %s to %s, arguments %s", function, topic, json.dumps(arguments))
         self._client.publish(topic, json.dumps(payload,separators=(',', ':')))
 
 
@@ -236,12 +232,11 @@ class ZendureBridge:
         Issues a MQTT request to trigger the device sending out all properties again.
         """
 
-        _topic = ( "iot/"
+        topic = ( "iot/"
                   f"{self.config.zendure.app_key}/{self.config.zendure.device_id}"
                   "/properties/read" )
 
         self.lastMessageID += 1
-
         _dict = {
            'timestamp': int(time.time() * 1000),
            'messageId': self.lastMessageID,
@@ -250,7 +245,8 @@ class ZendureBridge:
                 "getAll"
                ]
         }
-        self._client.publish(_topic, json.dumps(_dict))
+        logger.debug("get_all_properties to %s.", topic)
+        self._client.publish(topic, json.dumps(_dict))
 
     def update_state_value(self, field_name: str, value: int) -> None:
         """ allows updating the state object with a new value, thread safe. """

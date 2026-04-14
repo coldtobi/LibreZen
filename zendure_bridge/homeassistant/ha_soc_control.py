@@ -20,7 +20,7 @@ class HASoCControl(HANumberControl):
 
     def handle_command(self, mqttpayload:bytes, _zenstate: ZendureState,
                        zencontrol: ZendureController)->None :
-        """ handling setting of SoC limits. 
+        """ handling setting of SoC limits.
 
             The override is needed, as the value is scaled by the factor of 10.
             (10 % = 100)
