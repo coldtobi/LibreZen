@@ -56,12 +56,14 @@ HAENTITIES = [
 ]
 
 
-def find_sensor_obj(field_name: str) -> HAEntity | None:
-    """ helper to find the HAEntity Object in the HAENTITIES list.
-
-        if there are multiple entries for the field_name, only the first is found.
-    """
+def find_sensor_objs(field_name: str, entity_type: type | None = None) -> list[HAEntity]:
+    """ helper to find the HAEntity Objects in the HAENTITIES list. """
+    ret: list[HAEntity] = []
     for ent in HAENTITIES:
-        if ent.field_name == field_name:
-            return ent
-    return None
+        if ent.field_name != field_name:
+            continue
+
+        if entity_type is None or isinstance(ent, entity_type):
+            ret.append(ent)
+
+    return ret
