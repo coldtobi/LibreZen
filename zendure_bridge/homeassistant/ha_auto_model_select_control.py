@@ -6,14 +6,14 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-# example payload for setting automode 9: 
+# example payload for setting automode 9:
 #  {
 #    "arguments": [ {"autoModelProgram":1,"autoModelValue":1794,"msgType":1,"autoModel":9} ],
 #    "deviceKey":"<device_id>",
 #    "function":"deviceAutomation",
 #    "messageId":<random>,
 #    "timestamp":1775837446
-#  }        
+#  }
 
 
 
@@ -30,28 +30,20 @@ logger = logging.getLogger(__name__)
 @dataclass
 class HAAutoModelSelectControl(HASelectControl):
     """ MQTT Select Control for the "autoModel" property. """
-    
-    def update(self, state:ZendureState, zencontrol:ZendureController)->None:
-        super().update(state, zencontrol)
-    
-    def has_changed(self, state:ZendureState)->bool:
-        return super().has_changed(state)
 
-    def handle_command(self, mqttpayload:bytes, zenstate:ZendureState, _zencontrol:ZendureController)->None:
+    def handle_command(self, mqttpayload:bytes, zenstate:ZendureState, _zencontrol:ZendureController) -> None:
         received = mqttpayload.decode()
         _keys = [ key for key,val in self.lookup.items() if val == received ]
         if not _keys:
             logger.error("invalid autoMode %s received.", received)
             return
-
         assert len(_keys) == 1 , f"duplicate defintion of automode {received}"
 
         autoModel = int(_keys[0])
-        
-        # (note commented out for easier debug.)
-        #if autoModel == zenstate.auto_model:
-        #    # autoModel not changed.
-        #    return
+
+        if autoModel == zenstate.auto_model:
+            # autoModel not changed.
+            return
 
         arguments : dict[str,int] = {}
         # Note: currently only "0" "8" and "9" implemented.

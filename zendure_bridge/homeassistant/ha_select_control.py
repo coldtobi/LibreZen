@@ -15,7 +15,7 @@ from ..device import ZendureState
 
 @dataclass
 class HASelectControl(HAControl):
-    """ Implements a Homeassistant MQTT Select Control. 
+    """ Implements a Homeassistant MQTT Select Control.
 
         Infos for the Control: https://www.home-assistant.io/integrations/select.mqtt/
     """
