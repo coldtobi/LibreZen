@@ -114,6 +114,7 @@ class ZendureBridge:
             logger.warning("Unexpected disconnect (rc=%d), paho will reconnect", rc)
         if self._get_all_props_timer:
             self._get_all_props_timer.cancel()
+        self.has_pending_changes = False  # invalidate stale data.
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, message: mqtt.MQTTMessage) -> None:
         topic = message.topic
@@ -123,7 +124,13 @@ class ZendureBridge:
         changed = self.device.update_from_payload(topic, message.payload)
         state = self.device.state
 
-        if changed:
+        # defer processing if HAPublisher is not yet ready
+        if not self._hapublisher.is_ready and changed:
+          logger.info("HAPublisher not yet ready -- defering processing updates.")
+          self.has_pending_changes = True
+          return
+
+        if changed or self.has_pending_changes:
             logger.info(
                 "State: SoC=%d%% PV=%dW bat=%dW home=%dW grid=%dW limit=%dW",
                 state.electric_level,
@@ -150,6 +157,8 @@ class ZendureBridge:
             if haentity.needs_re_discovery:
                 self._hapublisher.publish_ha_discovery(haentity)
 
+        self.has_pending_changes = False
+
 
     # ------------------------------------------------------------------ #
     # Lifecycle                                                          #
@@ -160,7 +169,7 @@ class ZendureBridge:
         self._hapublisher.start()
 
         self._client.connect_async(self.config.mqtt.broker, self.config.mqtt.port)
-        self._client.reconnect_delay_set(min_delay=1, max_delay=120)
+        self._client.reconnect_delay_set(min_delay=10, max_delay=300)
         self._client.loop_start()
 
     def stop(self) -> None:
