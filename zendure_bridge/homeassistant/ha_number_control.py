@@ -25,6 +25,7 @@ class HANumberControl(HAControl):
     display_mode: str = "auto"    # "auto", "box" or "slider"
 
     is_expert: bool = False
+    is_syntetic: bool = False   # not a property of the zendure device, so don't send it to it.
 
     @property
     def ha_component_type(self) -> str:
