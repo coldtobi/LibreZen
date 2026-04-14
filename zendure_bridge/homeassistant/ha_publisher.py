@@ -30,6 +30,8 @@ class HAPublisher:
     based on the ZendureDevice state.
     """
 
+    is_ready: bool = False # Connected to the HA Broker and sent all discoveries / availabilities -> we are ready to accept data.
+
     def __init__(self,
                  mqttconfig: MqttConfig, zendevice: ZendureDevice, zencontrol: ZendureController ) -> None:
 
@@ -71,6 +73,9 @@ class HAPublisher:
             self.publish_ha_discovery(haentity)
             self.publish_availablity(haentity, self.zencontrol.get_zendure_state())
 
+        self.is_ready = True
+
+
     def _on_connect_fail(self, client: mqtt.Client, _userdata: Any) -> None:
         logger.warning("Connect to MQTT broker %s:%d failed.", self.mqttconfig.ha_broker, self.mqttconfig.ha_port)
 
@@ -78,6 +83,7 @@ class HAPublisher:
     def _on_disconnect(self, client: mqtt.Client, _userdata: Any, rc: int) -> None:
         if rc != 0:
             logger.warning("Unexpected disconnect (rc=%d), paho will reconnect", rc)
+        self.is_ready = False
 
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, message: mqtt.MQTTMessage) -> None:
