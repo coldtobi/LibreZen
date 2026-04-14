@@ -21,11 +21,7 @@
 #from .ha_entities import find_sensor_obj
 
 
-#@dataclass
-#class HASelectControl(HAControl):
-#    @property
-#    def ha_component_type(self) -> str:
-#        return "select"
+
 
 #@dataclass
 #class HASwitchControl(HAControl):
