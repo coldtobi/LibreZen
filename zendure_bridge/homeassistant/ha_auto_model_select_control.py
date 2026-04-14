@@ -31,6 +31,22 @@ logger = logging.getLogger(__name__)
 class HAAutoModelSelectControl(HASelectControl):
     """ MQTT Select Control for the "autoModel" property. """
 
+    def _generate_invoke_parameters(self, autoModelProgram:int ,autoModel:int, autoModelValue:int) -> dict[str, int]:
+        arguments : dict[str,int] = {}
+        # Note: currently only "0" "8" and "9" implemented.
+        match autoModel:
+            case 0 | 6 | 7:
+                arguments["autoModelProgram"] = 0
+            case 8 | 9 :
+                arguments["autoModelProgram"] = autoModelProgram
+                arguments["autoModelValue"]   = autoModelValue
+                arguments["msgType"] = 1
+            case 10:
+                arguments["autoModelProgram"] = 1
+        arguments["autoModel"] = autoModel
+        return arguments
+
+
     def handle_command(self, mqttpayload:bytes, zenstate:ZendureState, _zencontrol:ZendureController) -> None:
         received = mqttpayload.decode()
         _keys = [ key for key,val in self.lookup.items() if val == received ]
