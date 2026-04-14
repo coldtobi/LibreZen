@@ -377,10 +377,11 @@ HAENTITIES = [
     # Enum's
     EnumSensor("Auto Model",                "auto_model",           "",      "enum", _PROPERTY_MAP_AUTO_MODELS),
 
-#### CONTROLS ####
+#### CONTROLS (and if needed their Display-Sensors) ####
 #   HANumberControl(         name            field_name,            unit   min  max   step   device_class
     HAOutputLimitControl("Output Limit",     "output_limit",         "W",    0, 800,     1,  "power"),
     HAInvMaxPowerControl("Legal Inverter Limit", "inverse_max_power","W",  100,1200,   100,  "power", display_mode="box", is_expert=True),
+    HASensor("Current Inverter Limit",       "inverse_max_power",    "W",                    "power"),
     HASoCControl("min SoC",               "min_soc",              "%",    0,  50,     1,  "battery"),
     HASoCControl("max SoC",               "soc_set",              "%",   70, 100,     1,  "battery"),
 ]
