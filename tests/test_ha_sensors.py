@@ -31,7 +31,7 @@ class BridgeMock():
     def write_property(self, propetries: dict[str, Any]) -> None:
         pass
 
-    def invoke_function(self, propetries: dict[str, Any]) -> None:
+    def invoke_function(self, arguments: dict[str, Any], function:str) -> None:
         pass
 
     def update_ha_entity(self, field_name: str) -> None:
@@ -133,22 +133,16 @@ def test_sensor_get_value() -> None:
     assert sensor.get_value(state) == state.solar_input_power
 
 
-def test_sensor_needs_update_for_changed() -> None:
+def test_sensor_has_changed_first_check() -> None:
     # Arrange
     sensor = HASensor("Solar", "solar_input_power", "W", "power")
     state = ZendureState()
 
     # Act & Assert
-    # test that a sensor.update() is required to trigger "has changed"
-    default_value = sensor.get_value(state)
-    assert not sensor.has_changed(state)
-    state.solar_input_power = 42
-    assert not sensor.has_changed(state)
-    state.solar_input_power = default_value
-    assert not sensor.has_changed(state)
-    sensor.update(state, BridgeMock())
+    # first call to has_changed is always a change
     assert sensor.has_changed(state)
     assert not sensor.has_changed(state)
+
 
 
 def test_sensor_has_changed() -> None :
@@ -156,7 +150,6 @@ def test_sensor_has_changed() -> None :
     sensor = HASensor("Solar", "solar_input_power", "W", "power")
     state = ZendureState()
     state.solar_input_power = 42
-    sensor._have_received_value = True  # fake that we've received the value.
 
     # Act & Assert
     assert sensor.has_changed(state)
@@ -239,8 +232,6 @@ def test_batterysensor_update() -> None:
     assert state.battery_charge_power == permastate.battery_charge_power
 
     # Ensure has_changed works.
-    assert not sensor.has_changed(state) # not changed, as update() has never been called.
-    sensor._have_received_value = True  # simulate call to sensor.update()
     assert sensor.has_changed(state)
     assert not sensor.has_changed(state)
 
