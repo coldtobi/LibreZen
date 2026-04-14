@@ -1,6 +1,9 @@
 # test_ha_sensors.py
 
-from zendure_bridge.ha_sensors import HASensor, BatterySensor,HANumberControl
+from zendure_bridge.homeassistant.ha_sensor import HASensor
+from zendure_bridge.homeassistant.ha_battery_sensor import BatterySensor
+from zendure_bridge.homeassistant.ha_number_control import HANumberControl
+
 from zendure_bridge.device import ZendureState, ZendureDevice
 from zendure_bridge.bridge_context import BridgeContext
 import zendure_bridge
@@ -61,6 +64,7 @@ def test_hanumber_get_ha_json() -> None:
     sensor = HANumberControl("TestNumberControl", "solar_input_power", "W", 0, 100, 10, "power")
     mock = BridgeMock()
     result = json.loads(sensor.get_ha_json(mock))
+    zen_device_id = mock.get_bridge_context().zenconfig.device_id
 
     assert result["name"] == "TestNumberControl"
     assert result["min"] == 0
@@ -71,13 +75,13 @@ def test_hanumber_get_ha_json() -> None:
     assert result["state_topic"] == sensor.get_state_topic(mock)
     assert result["command_topic"] == sensor.get_command_topic(mock)
     assert result["availability_topic"] == sensor.get_availabilty_topic(mock)
-    zen_device_id = mock.get_bridge_context().zenconfig.device_id
+    assert result["mode"] == sensor.display_mode
     assert result["unique_id"] == f"zendure_{zen_device_id}_solar_input_power"
     assert result["device"]["identifiers"] == [f"zendure_{zen_device_id}"]
 
     expected_keys = {
         "name", "availability_topic", "state_topic", "command_topic", "unique_id", "device",
-        "unit_of_measurement", "min", "max", "step", "device_class"
+        "unit_of_measurement", "min", "max", "step", "device_class", "mode"
     }
     assert result.keys() == expected_keys
 
@@ -128,11 +132,31 @@ def test_sensor_get_value() -> None:
     assert sensor.get_value(state) == 42
     assert sensor.get_value(state) == state.solar_input_power
 
+
+def test_sensor_needs_update_for_changed() -> None:
+    # Arrange
+    sensor = HASensor("Solar", "solar_input_power", "W", "power")
+    state = ZendureState()
+
+    # Act & Assert
+    # test that a sensor.update() is required to trigger "has changed"
+    default_value = sensor.get_value(state)
+    assert not sensor.has_changed(state)
+    state.solar_input_power = 42
+    assert not sensor.has_changed(state)
+    state.solar_input_power = default_value
+    assert not sensor.has_changed(state)
+    sensor.update(state, BridgeMock())
+    assert sensor.has_changed(state)
+    assert not sensor.has_changed(state)
+
+
 def test_sensor_has_changed() -> None :
     # Arrange
     sensor = HASensor("Solar", "solar_input_power", "W", "power")
     state = ZendureState()
     state.solar_input_power = 42
+    sensor._have_received_value = True  # fake that we've received the value.
 
     # Act & Assert
     assert sensor.has_changed(state)
@@ -143,10 +167,9 @@ def test_sensor_has_changed() -> None :
     state.solar_input_power = 42
     assert not sensor.has_changed(state)
 
-    # Bu a change detected when set to a different value.
+    # But a change detected when set to a different value.
     state.solar_input_power = 21
     assert sensor.has_changed(state)
-
 
 
 def test_batterysensor_update() -> None:
@@ -216,6 +239,8 @@ def test_batterysensor_update() -> None:
     assert state.battery_charge_power == permastate.battery_charge_power
 
     # Ensure has_changed works.
+    assert not sensor.has_changed(state) # not changed, as update() has never been called.
+    sensor._have_received_value = True  # simulate call to sensor.update()
     assert sensor.has_changed(state)
     assert not sensor.has_changed(state)
 

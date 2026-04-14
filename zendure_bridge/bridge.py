@@ -32,8 +32,9 @@ from .config import load as load_config
 from .device import ZendureDevice, ZendureState
 from .bridge_context import BridgeContext
 
-from .ha_publisher import HAPublisher
-from .ha_sensors import HAENTITIES
+from zendure_bridge.homeassistant.ha_publisher import HAPublisher
+
+from .homeassistant.ha_entities import HAENTITIES
 
 logger = logging.getLogger(__name__)
 

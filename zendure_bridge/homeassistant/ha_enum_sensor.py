@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright 2026 Tobias Frost <tobi@coldtobi.de>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version
+
+from dataclasses import dataclass
+from typing import Any
+
+from .ha_sensor import HASensor
+from ..device import ZendureState
+from ..zendure_protocols import ZendureController
+
+@dataclass
+class EnumSensor(HASensor):
+    """ Sensor that maps an enum to strings for human-readable interpretation in homeassistant. """
+
+    lookup: dict[int, str]
+
+    def get_display_value(self, state: ZendureState) -> str:
+        numeric_value = self.get_value(state)
+        return self.lookup.get(numeric_value, "unknown")
+
+    def _build_ha_discovery_dict(self, zencontrol: ZendureController)-> dict[str, Any]:
+        _dict = super()._build_ha_discovery_dict(zencontrol)
+        _dict['options'] = list(self.lookup.values())
+        return _dict
