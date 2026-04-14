@@ -152,6 +152,8 @@ class HANumberControl(HAControl):
     step: int           # step size
     device_class: str   # HA device_class: "power", "battery", "energy"
 
+    is_expert: bool = False
+
     @property
     def ha_component_type(self) -> str:
         return "number"
@@ -189,6 +191,11 @@ class HANumberControl(HAControl):
         """
         _properties = self._get_command_properties(mqttpayload)
         zencontrol.write_property(_properties)
+
+    def is_available(self, _state: ZendureState, zencontrol: ZendureController) -> bool:
+        # expert controls are available only if expert_mode has been configured.
+        return ( not self.is_expert ) or zencontrol.get_bridge_context().haconfig.expert_mode
+
 
 @dataclass
 class HAOutputLimitControl(HANumberControl):
@@ -351,7 +358,7 @@ HAENTITIES = [
 #### CONTROLS ####
 #   HANumberControl(         name            field_name,            unit   min  max   step   device_class
     HAOutputLimitControl("Output Limit",     "output_limit",         "W",    0, 800,     1,  "power"),
-    HAInvMaxPowerControl("Legal Inverter Limit", "inverse_max_power","W",  100,1200,   100,  "power"),
+    HAInvMaxPowerControl("Legal Inverter Limit", "inverse_max_power","W",  100,1200,   100,  "power", is_expert=True),
     HASoCControl("min SoC",               "min_soc",              "%",    0,  50,     1,  "battery"),
     HASoCControl("max SoC",               "soc_set",              "%",   70, 100,     1,  "battery"),
 ]

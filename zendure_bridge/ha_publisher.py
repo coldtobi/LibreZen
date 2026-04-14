@@ -146,5 +146,5 @@ class HAPublisher:
         """
         topic = haentity.get_availabilty_topic(self.zencontrol)
         payload = "online" if haentity.is_available(state, self.zencontrol) else "offline"
-        logger.debug("Availabilty for %s is now %s", haentity.name)
+        logger.debug("Availabilty for %s is now %s", haentity.name, payload)
         self._client.publish(topic, payload, retain=True)
