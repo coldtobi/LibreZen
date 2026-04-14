@@ -84,7 +84,8 @@ class HAPublisher:
         # publications and be ready when all has been sent.
         if mid in self.discovery_mid:
             self.discovery_mid.remove(mid)
-            if not self.discovery_mid:
+            if (not self.is_ready) and (not self.discovery_mid):
+                logger.info("HAPublisher is now declared ready.")
                 self.is_ready = True
 
     def _on_connect_fail(self, client: mqtt.Client, _userdata: Any) -> None:
@@ -148,12 +149,10 @@ class HAPublisher:
     # -------------#
     def publish_state(self, haentity: HAEntity, state: ZendureState) -> None:
         """ publish the state (the value) of an entity """
-        logger.debug("sending state for %s, value %s", haentity.name, haentity.get_display_value(state))
-        self._client.publish(
-            haentity.get_state_topic(self.zencontrol),
-            haentity.get_display_value(state),
-            retain=False
-        )
+        payload = haentity.get_display_value(state)
+        topic = haentity.get_state_topic(self.zencontrol)
+        logger.debug("sending state for %s to %s, value %s", haentity.name, topic, payload)
+        self._client.publish(topic, payload, retain=True)
 
 
     def publish_availablity(self, haentity: HAEntity, state: ZendureState) -> None:
