@@ -23,6 +23,7 @@ class HAEntity:
     name: str            # human readable caption for Homeassistant.
     field_name: str      # fiels of the dataclass ZendureState-Feldname, including for syntetic, derived sensors or controls.
 
+    _have_received_value: bool = field(default=False, init=False) # is the state valid (did we get any value for it)
     _last_value: int = field(default=0, init=False)     # for change detection of the state value
     _last_availability: bool = field(default=True, init=False) # for the change detection of the availablity.
 
@@ -79,7 +80,7 @@ class HAEntity:
         }
         return _dict
 
-    def update(self, _state: ZendureState, zencontrol: ZendureController) -> None:
+    def update(self, state: ZendureState, zencontrol: ZendureController) -> None:
         """ override, when a state needs some math or logic to be useful.
 
         state is only a copy of the global states, changes to the state will be only temporary saved,
@@ -90,6 +91,11 @@ class HAEntity:
         To generate syntentic states, the "UpdateStateValue" protocol of ZendureController can be use to save values to the state object permanetly
         without the device needing to confirm the value.
         """
+        if not self._have_received_value:
+            # fake a changed value, to ensure we send out at least once initially.
+            # (if it happens that the new value is the init value)
+            self._last_value = self.get_value(state) + 1
+            self._have_received_value = True
         pass
 
     def get_value(self, state: ZendureState) -> int :
@@ -105,6 +111,8 @@ class HAEntity:
 
         A call to this function will consume the "has changed" state.
         """
+        if not self._have_received_value:
+            return False
         value = self.get_value(state)
         ret = (value != self._last_value)
         if (ret):
@@ -157,6 +165,7 @@ class HANumberControl(HAControl):
     max: int            # maximum value
     step: int           # step size
     device_class: str   # HA device_class: "power", "battery", "energy"
+    display_mode: str = "auto"    # "auto", "box" or "slider"
 
     is_expert: bool = False
 
@@ -171,7 +180,8 @@ class HANumberControl(HAControl):
             'min' : self.min,
             'max' : self.max,
             'step' : self.step,
-            'device_class' : self.device_class
+            'device_class' : self.device_class,
+            'mode' : self.display_mode
         }
         return (_dict | _extra)
 
@@ -238,11 +248,10 @@ class HAInvMaxPowerControl(HANumberControl):
             outputlimit.max = state.inverse_max_power
             outputlimit.needs_re_discovery = True
 
-        # hack: if the control is disabled (expert mode off), set the min/max values to the limit,
-        # so that the control does actually read the current number
-        if not self.is_available(state, zencontrol):
-            self.min = state.inverse_max_power
-            self.max = state.inverse_max_power
+        # hack: if the control is disabled (expert mode off), show as box
+        # as sliders won't cut it.
+        if (not self.is_available(state, zencontrol)) and (self.display_mode != "box"):
+            self.display_mode = "box"
             self.needs_re_discovery = True
 
 
@@ -371,7 +380,7 @@ HAENTITIES = [
 #### CONTROLS ####
 #   HANumberControl(         name            field_name,            unit   min  max   step   device_class
     HAOutputLimitControl("Output Limit",     "output_limit",         "W",    0, 800,     1,  "power"),
-    HAInvMaxPowerControl("Legal Inverter Limit", "inverse_max_power","W",  100,1200,   100,  "power", is_expert=True),
+    HAInvMaxPowerControl("Legal Inverter Limit", "inverse_max_power","W",  100,1200,   100,  "power", display_mode="box", is_expert=True),
     HASoCControl("min SoC",               "min_soc",              "%",    0,  50,     1,  "battery"),
     HASoCControl("max SoC",               "soc_set",              "%",   70, 100,     1,  "battery"),
 ]
