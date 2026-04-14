@@ -111,8 +111,10 @@ class ZendureState:
     extra: dict[str, Any] = field(default_factory=dict)
 
 
-    # Calculated through sensors.
+    # Syntectics / Calculated through sensors.
     battery_charge_power: int = 0    # Current Battery Charging/Discharging Power
+    auto_model_value: int = 0        # control value for autoMode 8 and 9
+    auto_model_program = 1           # autoModelProgram value for automode 9
 
 
 # Mapping from Zendure JSON property names to ZendureState field names.
@@ -171,11 +173,11 @@ _PROPERTY_MAP: dict[str, str] = {
 # (Achtung: ggf. noch weiter Parameter!
 _PROPERTY_MAP_AUTO_MODELS: dict[int, str] = {
     0:  "manual_control",          # keine selbständige Steuerung.
-    6:  "priorty_battery",         # Akkuprioritätsmodus.
-    7:  "time_mode",               # Terminmodus.
+#    6:  "priority_battery",        # Akkuprioritätsmodus.            ### NOT IMPLEMENTED IN HAAutoModelSelectControl ###
+#    7:  "time_mode",               # Terminmodus.                    ### NOT IMPLEMENTED IN HAAutoModelSelectControl ###
     8:  "smart_matching_mode",     # Intellegenter Abgleich Modus
     9:  "smart_ct_mode",           # Intellegenter CT Mode ("Shelly")
-   10:  "market_mode",             # Follow the prices…
+#   10:  "market_mode",             # Follow the prices…              ### NOT IMPLEMENTED IN HAAutoModelSelectControl ###
 }
 
 # pvBrand Mapping - es ist unbekannt was es eigentlich tut…
