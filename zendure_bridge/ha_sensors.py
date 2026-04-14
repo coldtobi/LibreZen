@@ -13,7 +13,6 @@ import json
 from typing import cast, Any
 from dataclasses import dataclass, field
 
-from .config import ZendureConfig, HAConfig
 from zendure_bridge.device import ZendureState, _PROPERTY_MAP, _PROPERTY_MAP_AUTO_MODELS
 from zendure_bridge.zendure_protocols import ZendureController
 
@@ -38,13 +37,13 @@ class HAEntity:
     def get_state_topic(self, zencontrol: ZendureController) -> str:
         """ generate mqtt topic string for homeassistant to publish a state """
         haconfig = zencontrol.get_bridge_context().haconfig
-        zenconfig = zencontrol.get_bridge_context().zenconfig    
+        zenconfig = zencontrol.get_bridge_context().zenconfig
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/state"
 
     def get_discovery_topic(self, zencontrol: ZendureController) -> str:
         """ generate mqtt topic string for homeassistant to publish a discovery topic. """
         haconfig = zencontrol.get_bridge_context().haconfig
-        zenconfig = zencontrol.get_bridge_context().zenconfig  
+        zenconfig = zencontrol.get_bridge_context().zenconfig
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/config"
 
     def _build_ha_discovery_dict(self, zencontrol: ZendureController) -> dict[str, Any]:
@@ -54,7 +53,7 @@ class HAEntity:
         """
         haconfig = zencontrol.get_bridge_context().haconfig
         zenconfig = zencontrol.get_bridge_context().zenconfig
-         
+
         _dict = {
             'name': self.name,
             'state_topic': self.get_state_topic(zencontrol),
@@ -101,7 +100,7 @@ class HAEntity:
 
     def is_available(self, _state: ZendureState, _zencontrol: ZendureController) -> bool:
         return True  # default: immer verfügbar
-    
+
     def has_availability_changed(self, state: ZendureState, zencontrol: ZendureController) -> bool:
         available = self.is_available(state, zencontrol)
         if available != self._last_availability:
@@ -131,7 +130,7 @@ class HAControl(HAEntity):
     def get_command_topic(self, zencontrol: ZendureController) -> str:
         """ assemble the MQTT topic to control this HAControl. """
         haconfig = zencontrol.get_bridge_context().haconfig
-        zenconfig = zencontrol.get_bridge_context().zenconfig  
+        zenconfig = zencontrol.get_bridge_context().zenconfig
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/set"
 
     def handle_command(self, _mqttpayload: bytes, _zenstate: ZendureState, _zencontrol: ZendureController) -> None:
@@ -204,10 +203,10 @@ class HAOutputLimitControl(HANumberControl):
 @dataclass
 class HAInvMaxPowerControl(HANumberControl):
     """ HAControl for maximum Inverter Output Setting
-    
+
         Limits the maximum output power, ("Legal setting" in the app)
     """
-    
+
     def update(self, state: ZendureState, zencontrol: ZendureController)->None:
         # Tweaking Outputlimit
         outputlimit = cast(HAOutputLimitControl, find_sensor_obj("output_limit"))
@@ -216,7 +215,7 @@ class HAInvMaxPowerControl(HANumberControl):
             fakepayload = str(state.inverse_max_power).encode()
             _properties = outputlimit._get_command_properties(fakepayload)
             zencontrol.write_property(_properties)
-        
+
         # re-set the homeassistant control's max if required.
         if outputlimit.max != state.inverse_max_power:
             outputlimit.max = state.inverse_max_power
@@ -230,17 +229,17 @@ class HAInvMaxPowerControl(HANumberControl):
 class HASoCControl(HANumberControl):
     def get_value(self, state: ZendureState) -> int:
         return int(super().get_value(state)/10)
-    
+
     def handle_command(self, mqttpayload:bytes, _zenstate: ZendureState,
                        zencontrol: ZendureController)->None :
-        
+
         # scaling - zendure wants value x 10
         _keys = [ key for key,val in _PROPERTY_MAP.items() if val == self.field_name ]
         assert len(_keys) == 1 , "Property not found or duplicate defintion."
         # generate dict and assign mqtt payload value.
         _properties = {
             _keys[0]: int(mqttpayload.decode())*10
-        }        
+        }
         zencontrol.write_property(_properties)
 
 @dataclass
@@ -298,13 +297,13 @@ class BatterySensor(HASensor):
 
 @dataclass
 class EnumSensor(HASensor):
-    
+
     lookup: dict[int, str]
-    
+
     def get_display_value(self, state: ZendureState) -> str:
         numeric_value = self.get_value(state)
-        return self.lookup.get(numeric_value, "unknown")    
-        
+        return self.lookup.get(numeric_value, "unknown")
+
     def _build_ha_discovery_dict(self, zencontrol: ZendureController)-> dict[str, Any]:
         _dict = super()._build_ha_discovery_dict(zencontrol)
         _dict['options'] = list(self.lookup.values())

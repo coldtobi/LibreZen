@@ -240,16 +240,16 @@ class ZendureDevice:
         with self._lock:
             self._message_count += 1
             changed = False
-    
+
             if topic.endswith("/properties/report") or topic.endswith("/properties/write"):
                 changed |= self._merge_properties(payload.get("properties", {}))
                 changed |= self._merge_pack_data(payload.get("packData", []))
-    
+
             elif topic.endswith("/function/invoke"):
                 # Log what the cloud is sending as control commands – useful for analysis
                 for arg in payload.get("arguments", []):
                     logger.debug("Cloud → device command: %s", arg)
-    
+
         return changed
 
     def _merge_properties(self, props: dict[str, Any]) -> bool:

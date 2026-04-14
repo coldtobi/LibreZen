@@ -11,7 +11,7 @@ from typing import Any
 
 import paho.mqtt.client as mqtt
 
-from .config import HAConfig, MqttConfig, ZendureConfig
+from .config import MqttConfig
 from .ha_sensors import HAEntity, HAControl, HAENTITIES, find_sensor_obj
 from zendure_bridge.device import ZendureDevice
 from zendure_bridge.zendure_protocols import ZendureController

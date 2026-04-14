@@ -18,10 +18,12 @@ class ZendurePropertyWriter(Protocol):
     def write_property(self, propetries: dict[str, Any]) -> None:
         ...
 
+
 class ZendureCommandInvoker(Protocol):
     @abstractmethod
     def invoke_function(self, propetries: dict[str, Any]) -> None:
         ...
+
 
 class ZendureUpdateStateValue(Protocol):
     """ This protocol is to allow updating a state into the global state object with thread safety."""

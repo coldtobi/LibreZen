@@ -30,13 +30,13 @@ class BridgeMock():
 
     def invoke_function(self, propetries: dict[str, Any]) -> None:
         pass
-    
+
     def update_ha_entity(self, field_name: str) -> None:
         pass
 
     def get_bridge_context(self) -> BridgeContext:
         return BridgeContext(self.bridgeconfig.zendure, self.bridgeconfig.homeassistant)
-    
+
 
 ## HAControl
 
