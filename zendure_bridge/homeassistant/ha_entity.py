@@ -22,9 +22,9 @@ class HAEntity:
     name: str            # human readable caption for Homeassistant.
     field_name: str      # fiels of the dataclass ZendureState-Feldname, including for syntetic, derived sensors or controls.
 
-    _have_received_value: bool = field(default=False, init=False) # is the state valid (did we get any value for it)
-    _last_value: int = field(default=0, init=False)     # for change detection of the state value
     _last_availability: bool = field(default=True, init=False) # for the change detection of the availablity.
+
+    _cached_display_value: int | str | None = field(default=None, init=False)
 
     needs_re_discovery: bool = field(default=False, init=False) # discovery information has changed, needs to be re-sent
 
@@ -43,19 +43,22 @@ class HAEntity:
 
     def get_state_topic(self, zencontrol: ZendureController) -> str:
         """ generate mqtt topic string for homeassistant to publish a state """
-        haconfig = zencontrol.get_bridge_context().haconfig
-        zenconfig = zencontrol.get_bridge_context().zenconfig
+        ctx = zencontrol.get_bridge_context()
+        haconfig = ctx.haconfig
+        zenconfig = ctx.zenconfig
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/state"
 
     def get_discovery_topic(self, zencontrol: ZendureController) -> str:
         """ generate mqtt topic string for homeassistant to publish a discovery topic. """
-        haconfig = zencontrol.get_bridge_context().haconfig
-        zenconfig = zencontrol.get_bridge_context().zenconfig
+        ctx = zencontrol.get_bridge_context()
+        haconfig = ctx.haconfig
+        zenconfig = ctx.zenconfig
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/config"
 
     def get_availabilty_topic(self, zencontrol: ZendureController) -> str:
-        haconfig = zencontrol.get_bridge_context().haconfig
-        zenconfig = zencontrol.get_bridge_context().zenconfig
+        ctx = zencontrol.get_bridge_context()
+        haconfig = ctx.haconfig
+        zenconfig = ctx.zenconfig
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/availability"
 
     def _build_ha_discovery_dict(self, zencontrol: ZendureController) -> dict[str, Any]:
@@ -63,8 +66,9 @@ class HAEntity:
 
             subclasses ammend this information, eg. to add HAControl specific information.
         """
-        haconfig = zencontrol.get_bridge_context().haconfig
-        zenconfig = zencontrol.get_bridge_context().zenconfig
+        ctx = zencontrol.get_bridge_context()
+        haconfig = ctx.haconfig
+        zenconfig = ctx.zenconfig
 
         _dict = {
             'name': self.name,
@@ -80,21 +84,7 @@ class HAEntity:
         return _dict
 
     def update(self, state: ZendureState, zencontrol: ZendureController) -> None:
-        """ override, when a state needs some math or logic to be useful.
-
-        state is only a copy of the global states, changes to the state will be only temporary saved,
-        as the device should confirm the new value via mqtt to make it "permamenet"
-
-        The lifetime of the temporary change will extended so that HAPublisher will detect the change and publish the value to homeassistant, though.
-
-        To generate syntentic states, the "UpdateStateValue" protocol of ZendureController can be use to save values to the state object permanetly
-        without the device needing to confirm the value.
-        """
-        #if not self._have_received_value:
-        #    # fake a changed value, to ensure we send out at least once initially.
-        #    # (if it happens that the new value is the init value)
-        #    self._last_value = self.get_value(state) + 1
-        #    self._have_received_value = True
+        pass
 
     def get_value(self, state: ZendureState) -> int :
         """ retrieve value - by default mapped directly to the state. """
@@ -109,13 +99,11 @@ class HAEntity:
 
         A call to this function will consume the "has changed" state.
         """
-        #if not self._have_received_value:
-        #    return False
-        value = self.get_value(state)
-        ret = (value != self._last_value)
-        if (ret):
-            self._last_value = value
-        return ret
+        value = self.get_display_value(state)
+        if value != self._cached_display_value:
+            self._cached_display_value = value
+            return True
+        return False
 
     def is_available(self, _state: ZendureState, _zencontrol: ZendureController) -> bool:
         return True  # default: immer verfügbar
