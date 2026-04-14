@@ -114,7 +114,7 @@ class ZendureState:
     # Syntectics / Calculated through sensors.
     battery_charge_power: int = 0    # Current Battery Charging/Discharging Power
     auto_model_value: int = 0        # control value for autoMode 8 and 9
-    auto_model_program = 1           # autoModelProgram value for automode 9
+    auto_model_program: int = 1      # autoModelProgram value for automode 9
 
 
 # Mapping from Zendure JSON property names to ZendureState field names.
