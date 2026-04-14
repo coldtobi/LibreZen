@@ -9,7 +9,6 @@
 from typing import Protocol, Any
 from abc import abstractmethod
 
-from zendure_bridge.ha_protocols import HomeAssistantUpdateEntity
 from zendure_bridge.bridge_context import BridgeContext
 from zendure_bridge.device import ZendureState
 
@@ -52,7 +51,6 @@ class ZendureContextProvider(Protocol):
 class ZendureController(ZendurePropertyWriter,
                         ZendureCommandInvoker,
                         ZendureUpdateStateValue,
-                        HomeAssistantUpdateEntity,
                         ZendureCurrentStateProvider,
                         ZendureContextProvider,
                         Protocol):

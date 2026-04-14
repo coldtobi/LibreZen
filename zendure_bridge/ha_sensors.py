@@ -26,12 +26,19 @@ class HAEntity:
     _last_value: int = field(default=0, init=False)     # for change detection of the state value
     _last_availability: bool = field(default=True, init=False) # for the change detection of the availablity.
 
+    needs_re_discovery: bool = field(default=False, init=False) # discovery information has changed, needs to be re-sent
+
     @property
     def ha_component_type(self) -> str:
         raise NotImplementedError
 
     def get_ha_json(self, zencontrol: ZendureController) -> str:
-        """ generate JSON to advertise the HAEntity to homassistant."""
+        """ generate JSON to advertise the HAEntity to homassistant.
+
+            The call to this function consumes/resets the 'needs_re_discovery'.
+        """
+
+        self.needs_re_discovery = False
         return json.dumps(self._build_ha_discovery_dict(zencontrol))
 
     def get_state_topic(self, zencontrol: ZendureController) -> str:
@@ -113,7 +120,6 @@ class HAEntity:
             self._last_availability = available
             return True
         return False
-
 
 def find_sensor_obj(field_name: str) -> HAEntity | None:
     """ helper to find the HAEntity Object in the HAENTITIES list."""
@@ -230,7 +236,14 @@ class HAInvMaxPowerControl(HANumberControl):
         # re-set the homeassistant control's max if required.
         if outputlimit.max != state.inverse_max_power:
             outputlimit.max = state.inverse_max_power
-            zencontrol.update_ha_entity(outputlimit.field_name)
+            outputlimit.needs_re_discovery = True
+
+        # hack: if the control is disabled (expert mode off), set the min/max values to the limit,
+        # so that the control does actually read the current number
+        if not self.is_available(state, zencontrol):
+            self.min = state.inverse_max_power
+            self.max = state.inverse_max_power
+            self.needs_re_discovery = True
 
 
 @dataclass

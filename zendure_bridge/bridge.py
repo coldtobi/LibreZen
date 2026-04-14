@@ -138,6 +138,8 @@ class ZendureBridge:
         for haentity in HAENTITIES:
             if haentity.has_availability_changed(state, self):
                 self._hapublisher.publish_availablity(haentity, state)
+            if haentity.needs_re_discovery:
+                self._hapublisher.publish_ha_discovery(haentity)
 
 
     # ------------------------------------------------------------------ #
@@ -223,13 +225,9 @@ class ZendureBridge:
     def get_bridge_context(self) -> BridgeContext:
         return BridgeContext(self.config.zendure, self.config.homeassistant)
 
-    # ------------------------------------------------------------------ #
-    # Homeassistant Protocols                                            #
-    # Those are proxied to HAPublisher.                                  #
-    # ------------------------------------------------------------------ #
 
-    def update_ha_entity(self, field_name: str) -> None:
-        self._hapublisher.update_ha_entity(field_name)
+
+
 
 
 def main() -> None:
