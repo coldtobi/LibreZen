@@ -90,12 +90,11 @@ class HAEntity:
         To generate syntentic states, the "UpdateStateValue" protocol of ZendureController can be use to save values to the state object permanetly
         without the device needing to confirm the value.
         """
-        if not self._have_received_value:
-            # fake a changed value, to ensure we send out at least once initially.
-            # (if it happens that the new value is the init value)
-            self._last_value = self.get_value(state) + 1
-            self._have_received_value = True
-        pass
+        #if not self._have_received_value:
+        #    # fake a changed value, to ensure we send out at least once initially.
+        #    # (if it happens that the new value is the init value)
+        #    self._last_value = self.get_value(state) + 1
+        #    self._have_received_value = True
 
     def get_value(self, state: ZendureState) -> int :
         """ retrieve value - by default mapped directly to the state. """
@@ -110,8 +109,8 @@ class HAEntity:
 
         A call to this function will consume the "has changed" state.
         """
-        if not self._have_received_value:
-            return False
+        #if not self._have_received_value:
+        #    return False
         value = self.get_value(state)
         ret = (value != self._last_value)
         if (ret):
