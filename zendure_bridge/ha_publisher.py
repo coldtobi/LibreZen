@@ -119,13 +119,6 @@ class HAPublisher:
                 payload="",
                 retain=True)
 
-    def update_ha_entity(self, field_name: str) -> None:
-        """ some property of an entity has changed, we need to do re-discovery """
-        _haentity = find_sensor_obj(field_name)
-        if _haentity:
-            self.publish_ha_discovery(_haentity)
-
-
     # -------------#
     # Topic States #
     # -------------#

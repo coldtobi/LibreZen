@@ -356,7 +356,6 @@ class SocSensor (HASensor):
 #        # this class can even store the calculated information in ZendureState, so that other sensors can derive
 #        # information from this as well (e.g a sensor "CapacityWh" or "BatteryHealth")
 
-
 # This table defines the states / controls for homeassistant.
 HAENTITIES = [
 #### HAENTITIES ####
