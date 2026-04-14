@@ -15,6 +15,7 @@ from .ha_soc_control import HASoCControl
 from .ha_output_limit_control import HAOutputLimitControl
 from .ha_inverse_max_power_control import HAInvMaxPowerControl
 from .ha_auto_model_select_control import HAAutoModelSelectControl as HAAutoMmodeSelCtrl
+from .ha_auto_model_value_control import HAAutoModelValueControl as HAAutoMValCtrl
 from .ha_number_control import HANumberControl
 
 from ..device import _PROPERTY_MAP_AUTO_MODELS
@@ -52,7 +53,7 @@ HAENTITIES = [
 
 # Syntetics for testing.
     HANumberControl("AutoModelProgram",     "auto_model_program",   "",     0,  2,      1,  "", display_mode="box", is_syntetic = True),
-    HANumberControl("AutoModelValue",       "auto_model_value",     "", -1000, 1000,    1,  "", display_mode="box", is_syntetic = True)
+    HAAutoMValCtrl("AutoModelValue",       "auto_model_value",     "", -1000, 1000,    1,  "", display_mode="box", is_syntetic = True)
 ]
 
 
