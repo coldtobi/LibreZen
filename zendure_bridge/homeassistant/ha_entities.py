@@ -17,6 +17,7 @@ from .ha_inverse_max_power_control import HAInvMaxPowerControl
 from .ha_auto_model_select_control import HAAutoModelSelectControl as HAAutoMmodeSelCtrl
 from .ha_auto_model_value_control import HAAutoModelValueControl as HAAutoMValCtrl
 from .ha_number_control import HANumberControl
+from .ha_switch_control import HASwitchControl
 
 from ..device import _PROPERTY_MAP_AUTO_MODELS
 
@@ -50,6 +51,8 @@ HAENTITIES = [
     HASoCControl("min SoC",                 "min_soc",              "%",    0,  50,     1,  "battery"),
     HASoCControl("max SoC",                 "soc_set",              "%",   70, 100,     1,  "battery"),
     HAAutoMmodeSelCtrl("Auto Model Ctrl",   "auto_model",  _PROPERTY_MAP_AUTO_MODELS),
+    HASwitchControl("Master Switch",       "master_switch"),
+    HASwitchControl("Buzzer Switch",       "buzzer_switch"),
 
 # Syntetics for testing.
     HANumberControl("AutoModelProgram",     "auto_model_program",   "",     0,  2,      1,  "", display_mode="box", is_syntetic = True),
