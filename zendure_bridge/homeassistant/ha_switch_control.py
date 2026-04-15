@@ -44,9 +44,11 @@ class HASwitchControl(HAControl):
         }
         return (_dict | _extra)
 
-    def get_display_value(self, state: ZendureState) -> str:
+    def get_display_value(self, state: ZendureState) -> str | None:
         # represent the binary state as ON/OFF for Home Assistant
         val = self.get_value(state)
+        if val is None:
+              return None
         try:
             is_on = bool(int(val))
         except Exception:

@@ -8,7 +8,7 @@
 
 import json
 
-from typing import cast, Any
+from typing import Any
 
 from dataclasses import dataclass, field
 
@@ -25,7 +25,6 @@ class HAEntity:
     _last_availability: bool = field(default=True, init=False) # for the change detection of the availablity.
 
     _cached_display_value: int | str | None = field(default=None, init=False)
-
     needs_re_discovery: bool = field(default=False, init=False) # discovery information has changed, needs to be re-sent
 
     @property
@@ -86,23 +85,40 @@ class HAEntity:
     def update(self, state: ZendureState, zencontrol: ZendureController) -> None:
         pass
 
-    def get_value(self, state: ZendureState) -> int :
-        """ retrieve value - by default mapped directly to the state. """
-        return cast(int, getattr(state, self.field_name))
+    def get_value(self, state: ZendureState) -> int | None:
+        """ retrieve value - by default mapped directly to the state.
 
-    def get_display_value(self, state: ZendureState) -> int | str:
+        Returns None if the underlying state field has not been initialized.
+        """
+        current = getattr(state, self.field_name)
+        if not isinstance(current, int):
+            return None
+        return current
+
+    def get_display_value(self, state: ZendureState) -> int | str | None:
         """Return the value to publish to HA. Override for string representations."""
         return self.get_value(state)
 
-    def has_changed(self , state: ZendureState) -> bool :
-        """ query if an information has been changed, e.g to avoid sending the same values to homeassistant again and again.
+    def has_changed(self, state: ZendureState) -> bool:
+        """Query whether an entity's visible value has changed.
 
-        A call to this function will consume the "has changed" state.
+        This call consumes the "has changed" state by updating the internal
+        cache when a change is observed. If the underlying state field has
+        not been initialized (i.e. is None) we consider there to be nothing to
+        report and return False. The first non-None observed value will be
+        treated as a change so that the initial actual state is advertised.
         """
+
+        # If the underlying (raw) value hasn't been set yet, don't advertise.
+        if self.get_value(state) is None:
+            return False
+
         value = self.get_display_value(state)
+
         if value != self._cached_display_value:
             self._cached_display_value = value
             return True
+
         return False
 
     def is_available(self, _state: ZendureState, _zencontrol: ZendureController) -> bool:

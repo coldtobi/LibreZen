@@ -15,8 +15,12 @@ from .ha_number_control import HANumberControl
 
 @dataclass
 class HASoCControl(HANumberControl):
-    def get_value(self, state: ZendureState) -> int:
-        return int(super().get_value(state)/10)
+
+    def get_value(self, state: ZendureState) -> int | None:
+        value = super().get_value(state)
+        if value is None:
+              return None
+        return int(value/10)
 
     def handle_command(self, mqttpayload:bytes, _zenstate: ZendureState,
                        zencontrol: ZendureController)->None :

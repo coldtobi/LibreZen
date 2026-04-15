@@ -23,11 +23,19 @@ class HAInvMaxPowerControl(HANumberControl):
 
         Limits the maximum output power, ("Legal setting" in the app)
     """
-    _cached_value: int = 600
+    _cached_value: int | None = None
 
     def update(self, state: ZendureState, zencontrol: ZendureController)->None:
         from .ha_entities import find_sensor_objs
         from .ha_output_limit_control import HAOutputLimitControl
+
+        if state.inverse_max_power is None:
+            return
+
+        inverse_max_power = state.inverse_max_power
+        output_limit = state.output_limit
+        if inverse_max_power is None or output_limit is None:
+            return
 
         # as update is called whenever _any_ state changes, limit to actual
         # changes on our value, as below might be a bit more expensive and
@@ -40,19 +48,20 @@ class HAInvMaxPowerControl(HANumberControl):
         ents = find_sensor_objs("output_limit", HAOutputLimitControl)
         assert ents,"Cannot find output_limit entity."
         outputlimit =  cast(HAOutputLimitControl, ents[0])
+
         # ensure that output limit's numeric control max is adjusted.
-        if state.inverse_max_power < state.output_limit:
+        if inverse_max_power < output_limit:
             fakepayload = str(state.inverse_max_power).encode()
             properties = outputlimit._get_command_properties(fakepayload)
             zencontrol.write_property(properties)
 
         # re-set the homeassistant control's max if required.
-        if outputlimit.max != state.inverse_max_power:
-            outputlimit.max = state.inverse_max_power
-            outputlimit.needs_re_discovery = True
+        if outputlimit.max != inverse_max_power:
+            outputlimit.max = inverse_max_power
+            outputlimit.needs_re_discovery = True  # FIXME implement protocol for re-discovery of entities, as this is a bit hacky.
 
         # hack: if the control is disabled (expert mode off), show as box
-        # as sliders won't cut it.
+        # as sliders won't display numeric values.
         if (not self.is_available(state, zencontrol)) and (self.display_mode != "box"):
             self.display_mode = "box"
-            self.needs_re_discovery = True
+            self.needs_re_discovery = True # FIXME implement protocol for re-discovery of entities, as this is a bit hacky.

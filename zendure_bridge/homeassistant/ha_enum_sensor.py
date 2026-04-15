@@ -19,8 +19,10 @@ class EnumSensor(HASensor):
 
     lookup: dict[int, str]
 
-    def get_display_value(self, state: ZendureState) -> str:
+    def get_display_value(self, state: ZendureState) -> str | None:
         numeric_value = self.get_value(state)
+        if numeric_value is None:
+              return None
         return self.lookup.get(numeric_value, "unknown")
 
     def _build_ha_discovery_dict(self, zencontrol: ZendureController)-> dict[str, Any]:

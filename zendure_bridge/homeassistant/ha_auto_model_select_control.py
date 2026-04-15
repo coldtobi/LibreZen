@@ -29,25 +29,41 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class HAAutoModelSelectControl(HASelectControl):
-    """ MQTT Select Control for the "autoModel" property. """
+    """ MQTT Select Control for the "autoModel" property.
 
-    def _generate_invoke_parameters(self, autoModelProgram:int ,autoModel:int, autoModelValue:int) -> dict[str, int]:
+        Note: This control is only for development and testing purposes, as the
+        autoModel property is not intended to be set by the user. The underlaying deviceAutomation feature
+        needs constant updating of its autoModelValue, not really suitable for (manual) user interaction.
+        (the control might still be made available for the experienced user wanting to do the control
+        loop entirely in homeassistant.
+    """
+    def _generate_invoke_parameters(self, automodelprogram:int, automodel:int, automodelvalue:int) -> dict[str, int]:
         arguments : dict[str,int] = {}
         # Note: currently only "0" "8" and "9" implemented.
-        match autoModel:
+        match automodel:
             case 0 | 6 | 7:
-                arguments["autoModelProgram"] = 0
+                arguments["automodelprogram"] = 0
             case 8 | 9 :
-                arguments["autoModelProgram"] = autoModelProgram
-                arguments["autoModelValue"]   = autoModelValue
+                arguments["automodelprogram"] = automodelprogram
+                arguments["autoModelValue"] = automodelvalue
                 arguments["msgType"] = 1
             case 10:
-                arguments["autoModelProgram"] = 1
-        arguments["autoModel"] = autoModel
+                arguments["automodelprogram"] = 1
+        arguments["automodel"] = automodel
         return arguments
 
 
     def handle_command(self, mqttpayload:bytes, zenstate:ZendureState, zencontrol:ZendureController) -> None:
+        autoModelProgram = zenstate.auto_model_program
+        autoModelValue = zenstate.auto_model_value
+        # Use default values if not set (this functionality is debug/development only, as this whole class is only for development and testing purposes.)
+        if autoModelProgram is None:
+            autoModelProgram = 1
+            zencontrol.update_state_value("auto_model_program", 1)
+        if autoModelValue is None:
+            autoModelValue = 0
+            zencontrol.update_state_value("auto_model_value", 0)
+
         received = mqttpayload.decode()
         _keys = [ key for key,val in self.lookup.items() if val == received ]
         if not _keys:
@@ -56,12 +72,9 @@ class HAAutoModelSelectControl(HASelectControl):
         assert len(_keys) == 1 , f"duplicate defintion of automode {received}"
         autoModel = int(_keys[0])
 
-        # (note commented out for easier debug.)
         if autoModel == zenstate.auto_model:
             # autoModel not changed.
             return
 
-        autoModelProgram = zenstate.auto_model_program
-        autoModelValue = zenstate.auto_model_value
         arguments = self._generate_invoke_parameters(autoModelProgram, autoModel, autoModelValue)
         zencontrol.invoke_function(arguments, "deviceAutomation")

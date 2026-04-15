@@ -149,7 +149,12 @@ def test_sensor_has_changed_first_check() -> None:
     state = ZendureState()
 
     # Act & Assert
-    # first call to has_changed is always a change
+    # Under the new semantics, an unset underlying state (None) is not
+    # considered a change - nothing has been received from the device yet.
+    assert not sensor.has_changed(state)
+
+    # When a concrete value is set, the first observation is a change.
+    state.solar_input_power = 42
     assert sensor.has_changed(state)
     assert not sensor.has_changed(state)
 

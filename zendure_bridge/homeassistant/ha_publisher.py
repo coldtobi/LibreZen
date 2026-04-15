@@ -150,6 +150,9 @@ class HAPublisher:
     def publish_state(self, haentity: HAEntity, state: ZendureState) -> None:
         """ publish the state (the value) of an entity """
         payload = haentity.get_display_value(state)
+        if payload is None:
+            logger.debug("skipping state publish for %s, value is None", haentity.name)
+            return
         topic = haentity.get_state_topic(self.zencontrol)
         logger.debug("sending state for %s to %s, value %s", haentity.name, topic, payload)
         self._client.publish(topic, payload, retain=True)

@@ -28,22 +28,24 @@ class PackState:
     """State of a single battery pack."""
 
     sn: str
-    soc_level: int = 0          # % state of charge
-    power: int = 0              # W (positive = charging)
-    state: int = 0              # 2 = charging, 3 = discharging
-    max_temp: int = 0           # °C * 100 (e.g. 2801 = 28.01°C)
-    total_vol: int = 0          # mV total voltage
-    max_vol: int = 0            # mV max cell voltage
-    min_vol: int = 0            # mV min cell voltage
-    soh: int = 1000             # state of health, 1000 = 100%
+    soc_level: int | None = None          # % state of charge
+    power: int | None = None              # W (positive = charging)
+    state: int | None = None              # 2 = charging, 3 = discharging
+    max_temp: int | None = None           # °C * 100 (e.g. 2801 = 28.01°C)
+    total_vol: int | None = None          # mV total voltage
+    max_vol: int | None = None            # mV max cell voltage
+    min_vol: int | None = None            # mV min cell voltage
+    soh: int | None = None                # state of health, 1000 = 100%
 
     @property
     def temp_celsius(self) -> float:
-        return self.max_temp / 100.0
+        # If max_temp has not been initialized, treat as 0 for compatibility.
+        return (self.max_temp or 0) / 100.0
 
     @property
     def soh_percent(self) -> float:
-        return self.soh / 10.0
+        # If soh not initialized, treat as 0 for compatibility.
+        return (self.soh or 0) / 10.0
 
 
 @dataclass
@@ -51,58 +53,58 @@ class ZendureState:
     """Consolidated state of the Zendure SolarFlow hub."""
 
     # Power values (W)
-    solar_input_power: int = 0      # total PV input
-    solar_power_1: int = 0          # PV string 1
-    solar_power_2: int = 0          # PV string 2
-    pack_input_power: int = 0       # battery charging power
-    output_home_power: int = 0      # output to home
-    output_pack_power: int = 0      # output from battery
-    output_pack_power_cylce: int = 0 # unknown.
-    grid_power: int = 0             # unknown.
-    inverse_max_power: int = 600    # inverter output limit (W)
-    output_limit: int = 0           # current output limit (W)
-    input_limit: int = 0            # unknown.
+    solar_input_power: int | None = None      # total PV input
+    solar_power_1: int | None = None          # PV string 1
+    solar_power_2: int | None = None          # PV string 2
+    pack_input_power: int | None = None       # battery charging power
+    output_home_power: int | None = None      # output to home
+    output_pack_power: int | None = None      # output from battery
+    output_pack_power_cylce: int | None = None # unknown.
+    grid_power: int | None = None             # unknown.
+    inverse_max_power: int | None = None      # inverter output limit (W)
+    output_limit: int | None = None           # current output limit (W)
+    input_limit: int | None = None            # unknown.
 
-    pack_input_power_cycle: int = 0 # unknown.
-    output_home_power_cycle: int = 0 # unknown.
-    solar_power_1_cycle: int = 0    # unknown.
-    solar_power_2_cycle: int = 0    # unknown.
+    pack_input_power_cycle: int | None = None # unknown.
+    output_home_power_cycle: int | None = None # unknown.
+    solar_power_1_cycle: int | None = None    # unknown.
+    solar_power_2_cycle: int | None = None    # unknown.
 
     # State
-    electric_level: int = 0         # overall SoC (%)
-    soc_set: int = 1000             # target SoC * 10 (1000 = 100%)
-    min_soc: int = 100              # min SoC * 10 (100 = 10%)
-    master_switch: int = 0          # 0 = off, 1 = on
-    auto_model: int = 0             # see mapping _PROPERTY_MAP_AUTO_MODELS
-    pack_state: int = 0             # 1 = charging, 2 = discharging, 0 = idle
-    hub_state: int = 0              # 1 = turn hub off after discharge, 2 = standby
-    pack_num: int = 0               # number of batteries.
-    wifi_state:int = 0              # something with wifi…
-    buzzer_switch: int = 0          # Buzzer On(=1)/Off(=0)
-    input_mode: int = 0             # unknown, zendure github suggests "DC input mode" they write: "car charger(1), solar energy"
-    blue_ota: int = 0               # unknown.
-    bypass_active: int = 0          # If the battery is bypassed (1) or not (0)
-    bypass_mode: int = 0            # mode selection for the bypass switch. see mapping _PROPERTY_MAP_BYPASS_MODES
-    bypass_auto_recover: int = 0    # reset bypass mode automatically after a day.
-    smart_mode: int = 1             # store paremetes in flash(=0), keep it in RAM(=1). Recommended value is 1
-    smart_power: int = 0            # unknown.
-    heat_state: int = 0             # the battery is being heated(=1).
-    ac_mode: int = 0                # charge=1, discharge=2 - see zenSDK openapi.yaml
+    electric_level: int | None = None         # overall SoC (%)
+    soc_set: int | None = None                # target SoC * 10 (1000 = 100%)
+    min_soc: int | None = None               # min SoC * 10 (100 = 10%)
+    master_switch: int | None = None         # 0 = off, 1 = on
+    auto_model: int | None = None            # see mapping _PROPERTY_MAP_AUTO_MODELS
+    pack_state: int | None = None            # 1 = charging, 2 = discharging, 0 = idle
+    hub_state: int | None = None             # 1 = turn hub off after discharge, 2 = standby
+    pack_num: int | None = None              # number of batteries.
+    wifi_state:int | None = None             # something with wifi…
+    buzzer_switch: int | None = None         # Buzzer On(=1)/Off(=0)
+    input_mode: int | None = None            # unknown, zendure github suggests "DC input mode" they write: "car charger(1), solar energy"
+    blue_ota: int | None = None              # unknown.
+    bypass_active: int | None = None         # If the battery is bypassed (1) or not (0)
+    bypass_mode: int | None = None           # mode selection for the bypass switch. see mapping _PROPERTY_MAP_BYPASS_MODES
+    bypass_auto_recover: int | None = None   # reset bypass mode automatically after a day.
+    smart_mode: int | None = None            # store paremetes in flash(=0), keep it in RAM(=1). Recommended value is 1
+    smart_power: int | None = None           # unknown.
+    heat_state: int | None = None            # the battery is being heated(=1).
+    ac_mode: int | None = None               # charge=1, discharge=2 - see zenSDK openapi.yaml
 
 
 
     # Misc Information
-    master_soft_version: int = 0    # (Master) software version. bit-coded: MMMM mmmm rrrr rrrr
+    master_soft_version: int | None = None    # (Master) software version. bit-coded: MMMM mmmm rrrr rrrr
                                     # The example below: 2.0.45 is transmitted as 8237 = 0x2045
                                     # MMMM = Mayor Version eg. 0010      -> 2
                                     # mmmm = Minor Version eg. 0000      -> 0
                                     # rrrr = Revision      eg. 0010 1101 -> 45
-    master_haer_Version: int = 0    # Some software version.
-    inverter_pv_brand: int = 0      # Inverter Pre-configuration, see _PROPERTY_MAP_PV_MODELS
+    master_haer_Version: int | None = None    # Some software version.
+    inverter_pv_brand: int | None = None      # Inverter Pre-configuration, see _PROPERTY_MAP_PV_MODELS
 
     # Timing
-    remain_out_time: int = 0        # minutes remaining discharge
-    remain_input_time: int = 0      # unkown, maybe minutes remaining charge. always reported as "59940" so far.
+    remain_out_time: int | None = None        # minutes remaining discharge
+    remain_input_time: int | None = None      # unkown, maybe minutes remaining charge. always reported as "59940" so far.
 
     # Packs
     packs: dict[str, PackState] = field(default_factory=dict)
@@ -112,9 +114,9 @@ class ZendureState:
 
 
     # Syntectics / Calculated through sensors.
-    battery_charge_power: int = 0    # Current Battery Charging/Discharging Power
-    auto_model_value: int = 0        # control value for autoMode 8 and 9
-    auto_model_program: int = 1      # autoModelProgram value for automode 9
+    battery_charge_power: int | None = None    # Current Battery Charging/Discharging Power
+    auto_model_value: int | None = None        # control value for autoMode 8 and 9
+    auto_model_program: int | None = None      # autoModelProgram value for automode 9
 
 
 # Mapping from Zendure JSON property names to ZendureState field names.
