@@ -16,10 +16,7 @@ It provides an interface for HAPublisher to be able to send control commands.
 
 from __future__ import annotations
 
-import argparse
 import logging
-import signal
-import sys
 import time
 import json
 import threading
@@ -27,7 +24,7 @@ from typing import Any
 
 import paho.mqtt.client as mqtt
 
-from . import __version__
+from .version import __version__
 from .config import BridgeConfig
 from .config import load as load_config
 from .device import ZendureDevice, ZendureState
@@ -126,9 +123,9 @@ class ZendureBridge:
 
         # defer processing if HAPublisher is not yet ready
         if not self._hapublisher.is_ready and changed:
-          logger.info("HAPublisher not yet ready -- defering processing updates.")
-          self.has_pending_changes = True
-          return
+            logger.info("HAPublisher not yet ready -- defering processing updates.")
+            self.has_pending_changes = True
+            return
 
         if changed or self.has_pending_changes:
             logger.info(
@@ -258,46 +255,3 @@ class ZendureBridge:
 
     def get_bridge_context(self) -> BridgeContext:
         return BridgeContext(self.config.zendure, self.config.homeassistant)
-
-
-
-
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Local MQTT bridge for Zendure SolarFlow"
-    )
-    parser.add_argument(
-        "--config", default="config.yaml",
-        help="Path to config file (default: config.yaml)"
-    )
-    parser.add_argument(
-        "--version", action="version", version=f"%(prog)s {__version__}"
-    )
-    args = parser.parse_args()
-
-    try:
-        config = load_config(args.config)
-    except (FileNotFoundError, ValueError) as e:
-        print(f"Configuration error: {e}", file=sys.stderr)
-        sys.exit(1)
-
-    setup_logging(config.log_level, config.log_file)
-
-    bridge = ZendureBridge(config)
-
-    # Graceful shutdown on Ctrl-C or SIGTERM
-    def _signal_handler(sig: int, frame: Any) -> None:
-        bridge.stop()
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, _signal_handler)
-    signal.signal(signal.SIGTERM, _signal_handler)
-
-    bridge.start()
-
-    signal.pause()
-
-if __name__ == "__main__":
-    main()

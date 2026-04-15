@@ -6,4 +6,13 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-"""zendure-bridge – local MQTT bridge for Zendure SolarFlow."""
+"""Top-level runner for zendure-bridge.
+
+This file provides a convenient top-level script that calls the package
+CLI entrypoint.
+"""
+
+from zendure_bridge.cli import main
+
+if __name__ == "__main__":
+    main()

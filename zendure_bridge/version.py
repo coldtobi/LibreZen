@@ -6,4 +6,6 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-"""zendure-bridge – local MQTT bridge for Zendure SolarFlow."""
+"""Package version for zendure_bridge. """
+
+__version__ = "0.1.0"
