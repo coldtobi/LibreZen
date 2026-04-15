@@ -50,7 +50,6 @@ class MqttConfig:
 class ZendureConfig:
     app_key: str
     device_id: str
-    max_output_power: int = 600
     min_soc: int = 10
     product: str = "solarFlow"
 
@@ -104,9 +103,7 @@ def load(path: str | Path = "config.yaml") -> BridgeConfig:
             app_key=z_raw["app_key"],
             device_id=z_raw["device_id"],
             product=z_raw.get("product", "solarFlow"),
-            max_output_power=int(z_raw.get("max_output_power", 600)),
             min_soc=int(z_raw.get("min_soc", 10)),
-
         )
 
         ha_raw = raw.get("homeassistant", {})
