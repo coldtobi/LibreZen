@@ -42,14 +42,14 @@ class HAAutoModelSelectControl(HASelectControl):
         # Note: currently only "0" "8" and "9" implemented.
         match automodel:
             case 0 | 6 | 7:
-                arguments["automodelprogram"] = 0
+                arguments["autoModelProgram"] = 0
             case 8 | 9 :
-                arguments["automodelprogram"] = automodelprogram
+                arguments["autoModelProgram"] = automodelprogram
                 arguments["autoModelValue"] = automodelvalue
                 arguments["msgType"] = 1
             case 10:
-                arguments["automodelprogram"] = 1
-        arguments["automodel"] = automodel
+                arguments["autoModelProgram"] = 1
+        arguments["autoModel"] = automodel
         return arguments
 
 
@@ -69,7 +69,7 @@ class HAAutoModelSelectControl(HASelectControl):
         if not _keys:
             logger.error("invalid autoMode %s received.", received)
             return
-        assert len(_keys) == 1 , f"duplicate defintion of automode {received}"
+        assert len(_keys) == 1 , f"duplicate defintion of autoMode {received}"
         autoModel = int(_keys[0])
 
         if autoModel == zenstate.auto_model:
