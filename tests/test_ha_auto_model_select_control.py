@@ -2,48 +2,9 @@
 from zendure_bridge.homeassistant.ha_auto_model_select_control import HAAutoModelSelectControl
 from zendure_bridge.device import _PROPERTY_MAP_AUTO_MODELS
 
-from zendure_bridge.device import ZendureState, ZendureDevice
-from zendure_bridge.bridge_context import BridgeContext
-import zendure_bridge
+from zendure_bridge.device import ZendureState
 
-from typing import Any
-
-class MockController():
-
-    def __init__(self) -> None:
-        self.bridgeconfig = zendure_bridge.config.load("tests/config.yaml")
-        z = self.bridgeconfig.zendure
-        self.device = ZendureDevice(z.device_id)
-        # capture last interactions for tests
-        self.last_written: dict[str, Any] | None = None
-        self.last_invoked: dict[str, Any] | None = None
-
-    def update_state_value(self, field_name: str, value: int) -> None:
-        """ allows updating the state object with a new value, thread safe. """
-        self.device.update_value(field_name, value)
-
-    def write_property(self, propetries: dict[str, Any], persistent: bool = False) -> None:
-        """Mock implementation that records the last written properties.
-
-        The real bridge may publish this to MQTT; tests can inspect `last_written`.
-        """
-        # store a copy so tests can assert on it
-        self.last_written = dict(propetries)
-
-    def invoke_function(self, arguments: dict[str, Any], function:str) -> None:
-        """Mock implementation that records the last invoked function and its arguments."""
-        self.last_invoked = {"function": function, "arguments": dict(arguments)}
-
-    def update_ha_entity(self, field_name: str) -> None:
-        pass
-
-    def get_zendure_state(self) -> ZendureState:
-        return self.device.state
-
-    def get_bridge_context(self) -> BridgeContext:
-        return BridgeContext(self.bridgeconfig.zendure, self.bridgeconfig.homeassistant)
-
-
+from .bridge_mock import BridgeMock
 
 def test_generate_invoke_parameters_contains_camelcase_keys() -> None:
     # Use the control's default lookup (should reflect device mapping)
@@ -66,7 +27,7 @@ def test_handle_command_invokes_deviceAutomation_with_camelcase_arguments() -> N
     state.auto_model_value = None
     state.auto_model = 0
 
-    mock = MockController()
+    mock = BridgeMock()
 
     # send payload corresponding to lookup value for automodel 9
     payload = ctrl.lookup[9].encode()

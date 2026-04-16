@@ -1,14 +1,16 @@
 from typing import Any
+import os
 
 from zendure_bridge.device import ZendureState, ZendureDevice
 from zendure_bridge.bridge_context import BridgeContext
 import zendure_bridge
 
-
-class MockController():
+class BridgeMock():
 
     def __init__(self) -> None:
-        self.bridgeconfig = zendure_bridge.config.load("tests/config.yaml")
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        self.bridgeconfig = zendure_bridge.config.load(f"{dir_path}/config.yaml")
+        assert self.bridgeconfig.homeassistant.discovery_prefix == "homeassistant_python_tests"
         z = self.bridgeconfig.zendure
         self.device = ZendureDevice(z.device_id)
         # capture last interactions for tests
