@@ -1,0 +1,45 @@
+# zendure-bridge configuration
+# Copy to config.yaml and fill in your values.
+# config.yaml is in .gitignore – never commit credentials!
+
+mqtt:
+  # The Mosquitto broker on your Raspberry Pi
+  broker: "192.168.1.x"
+  port: 1883
+  username: "mqtt"
+  password: "changeme"
+  client_id: "zendure-bridge"
+
+  # Home Assistant MQTT broker (can be the same as above)
+  ha_broker: "192.168.1.x"
+  ha_port: 1883
+  ha_username: "mqtt"
+  ha_password: "changeme"
+
+zendure:
+  # From the MQTT topics: /ABCDEF/abcdefgh/...
+  app_key: "ABCDEF"
+  device_id: "abcdefgh
+
+  # Minimum SoC to keep in battery (%)
+  # Corresponds to minSoc property (device reports x10, so 100 = 10%)
+  min_soc: 10
+
+  # Battery packs (SNs from packData)
+  packs:
+    - sn: "123456789012345"
+    - sn: "ABCDEFGHIJLKLMN"
+
+homeassistant:
+  # MQTT Discovery prefix (default in HA)
+  discovery_prefix: "homeassistant"
+  # Device name as it appears in HA
+  device_name: "Zendure SolarFlow"
+  # Expose "expert" MQTT controls.
+  expert_mode: true
+
+logging:
+  # DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  # Optional: log to file instead of stdout
+  # file: "/var/log/zendure-bridge.log"
