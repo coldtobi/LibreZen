@@ -1,4 +1,11 @@
-# tests for HAAutoModelSelectControl
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright 2026 Tobias Frost <tobi@coldtobi.de>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
 from zendure_bridge.homeassistant.ha_auto_model_select_control import HAAutoModelSelectControl
 from zendure_bridge.device import _PROPERTY_MAP_AUTO_MODELS
 
@@ -17,7 +24,7 @@ def test_generate_invoke_parameters_contains_camelcase_keys() -> None:
     assert params["autoModel"] == 9
 
 
-def test_handle_command_invokes_deviceAutomation_with_camelcase_arguments() -> None:
+def test_handle_command_invokes_deviceAutomation() -> None:
     # Use the control's default lookup coming from device mapping
     ctrl = HAAutoModelSelectControl("AutoModel", "auto_model", lookup = _PROPERTY_MAP_AUTO_MODELS)
 
