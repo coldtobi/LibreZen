@@ -14,8 +14,6 @@ the information to the HApublisher to publish the information in home assistant.
 It provides an interface for HAPublisher to be able to send control commands.
 """
 
-from __future__ import annotations
-
 import logging
 import time
 import json
@@ -126,15 +124,9 @@ class ZendureBridge:
             return
 
         if changed or self.has_pending_changes:
-            logger.info(
-                "State: SoC=%d%% PV=%dW bat=%dW home=%dW grid=%dW limit=%dW",
-                state.electric_level,
-                state.solar_input_power,
-                state.pack_input_power,
-                state.output_home_power,
-                state.grid_power,
-                state.output_limit,
-            )
+            logger.info(f"State: SoC={state.electric_level} PV={state.solar_input_power} "
+                        f"bat={state.pack_input_power} home={state.output_home_power} "
+                        f"grid={state.grid_power} limit={state.output_limit}")
 
             # Update haentity values.
             for haentity in HAENTITIES:
