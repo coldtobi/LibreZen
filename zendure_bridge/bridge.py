@@ -63,7 +63,7 @@ class ZendureBridge:
 
     lastMessageID : int = 0  # Message counter for the chatting.
     has_pending_changes: bool = False # Some changes could not be forwarded to ha_publish (because it was not ready)
-    _get_all_props_timer = None  # Timer to schedule "get_all_properties"
+    _get_all_props_timer = None  # Timer to schedule "_get_all_properties"
 
     def __init__(self, config: BridgeConfig) -> None:
         self.config = config
@@ -100,11 +100,9 @@ class ZendureBridge:
             client.subscribe(topic)
             logger.info("Subscribed to %s", topic)
 
-        # schedule get_all_properties in a few seconds, to allow everything to be ready.
-        if self._get_all_props_timer:
-            self._get_all_props_timer.cancel()
-        self._get_all_props_timer = threading.Timer(1.0, self.get_all_properties)
-        self._get_all_props_timer.start()
+        # schedule _get_all_properties()
+        # it will schedule itself if the timer is not running to run once a minute.
+        self._get_all_properties()
 
     def _on_disconnect(self, _client: mqtt.Client, _userdata: Any, rc: int) -> None:
         if rc != 0:
@@ -223,7 +221,7 @@ class ZendureBridge:
         self._client.publish(topic, json.dumps(payload,separators=(',', ':')))
 
 
-    def get_all_properties(self) -> None:
+    def _get_all_properties(self) -> None:
         """ get all properties from the device.
 
         Issues a MQTT request to trigger the device sending out all properties again.
@@ -242,8 +240,15 @@ class ZendureBridge:
                 "getAll"
                ]
         }
-        logger.debug("get_all_properties to %s.", topic)
+        logger.debug("_get_all_properties to %s.", topic)
         self._client.publish(topic, json.dumps(_dict))
+
+        if self._get_all_props_timer:
+            self._get_all_props_timer.cancel()
+        if self.config.zendure.get_all_properties_interval > 0:
+            self._get_all_props_timer = threading.Timer(self.config.zendure.get_all_properties_interval, self._get_all_properties)
+            self._get_all_props_timer.start()
+
 
     def update_state_value(self, field_name: str, value: int) -> None:
         """ allows updating the state object with a new value, thread safe. """

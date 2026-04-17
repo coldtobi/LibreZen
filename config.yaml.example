@@ -21,9 +21,9 @@ zendure:
   app_key: "ABCDEF"
   device_id: "abcdefgh
 
-  # Minimum SoC to keep in battery (%)
-  # Corresponds to minSoc property (device reports x10, so 100 = 10%)
-  min_soc: 10
+  # Interval between polling all properties (e.g. SoC, voltage, etc.) from the device
+  # 0 disables the automatic polling after the initial query.
+  # get_all_properties_interval: 60 # seconds
 
   # Battery packs (SNs from packData)
   packs:

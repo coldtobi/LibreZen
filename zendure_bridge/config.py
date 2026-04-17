@@ -50,8 +50,8 @@ class MqttConfig:
 class ZendureConfig:
     app_key: str
     device_id: str
-    min_soc: int = 10
     product: str = "solarFlow"
+    get_all_properties_interval: int = 60  # seconds
 
 
 @dataclass
@@ -103,7 +103,7 @@ def load(path: str | Path = "config.yaml") -> BridgeConfig:
             app_key=z_raw["app_key"],
             device_id=z_raw["device_id"],
             product=z_raw.get("product", "solarFlow"),
-            min_soc=int(z_raw.get("min_soc", 10)),
+            get_all_properties_interval=int(z_raw.get("get_all_properties_interval", 60)),
         )
 
         ha_raw = raw.get("homeassistant", {})
