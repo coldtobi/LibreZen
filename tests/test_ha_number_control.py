@@ -16,22 +16,22 @@ import json
 def test_hanumber_get_discovery_topic() -> None:
     sensor = HANumberControl("TestNumberControl", "solar_input_power", "W", 0, 100, 10, "power")
     mock = BridgeMock()
-    topic = sensor.get_discovery_topic(mock)
+    topic = sensor.get_discovery_topic(mock.bc)
     assert topic == "homeassistant_python_tests/number/zendure_12345678_solar_input_power/config"
 
 
 def test_hanumber_get_state_topic() -> None:
     sensor = HANumberControl("TestNumberControl", "solar_input_power", "W", 0, 100, 10, "power")
     mock = BridgeMock()
-    topic = sensor.get_state_topic(mock)
+    topic = sensor.get_state_topic(mock.bc)
     assert topic == "homeassistant_python_tests/number/zendure_12345678_solar_input_power/state"
 
 
 def test_hanumber_get_ha_json() -> None:
     sensor = HANumberControl("TestNumberControl", "solar_input_power", "W", 0, 100, 10, "power")
     mock = BridgeMock()
-    result = json.loads(sensor.get_ha_json(mock))
-    zen_device_id = mock.get_bridge_context().zenconfig.device_id
+    result = json.loads(sensor.get_ha_json(mock.bc))
+    zen_device_id = mock.bc.config.zendure.device_id
 
     assert result["name"] == "TestNumberControl"
     assert result["min"] == 0
@@ -39,9 +39,9 @@ def test_hanumber_get_ha_json() -> None:
     assert result["step"] == 10
     assert result["unit_of_measurement"] == "W"
     assert result["device_class"] == "power"
-    assert result["state_topic"] == sensor.get_state_topic(mock)
-    assert result["command_topic"] == sensor.get_command_topic(mock)
-    assert result["availability_topic"] == sensor.get_availabilty_topic(mock)
+    assert result["state_topic"] == sensor.get_state_topic(mock.bc)
+    assert result["command_topic"] == sensor.get_command_topic(mock.bc)
+    assert result["availability_topic"] == sensor.get_availabilty_topic(mock.bc)
     assert result["mode"] == sensor.display_mode
     assert result["unique_id"] == f"zendure_{zen_device_id}_solar_input_power"
     assert result["device"]["identifiers"] == [f"zendure_{zen_device_id}"]

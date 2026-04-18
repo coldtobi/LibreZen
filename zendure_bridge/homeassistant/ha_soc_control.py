@@ -8,10 +8,10 @@
 
 from dataclasses import dataclass
 
-from ..device import ZendureState, _PROPERTY_MAP
-from ..zendure_protocols import ZendureController
-
 from .ha_number_control import HANumberControl
+
+from ..device import ZendureState, _PROPERTY_MAP
+from ..bridge_components import BridgeComponents
 
 @dataclass
 class HASoCControl(HANumberControl):
@@ -19,11 +19,11 @@ class HASoCControl(HANumberControl):
     def get_value(self, state: ZendureState) -> int | None:
         value = super().get_value(state)
         if value is None:
-              return None
+            return None
         return int(value/10)
 
     def handle_command(self, mqttpayload:bytes, _zenstate: ZendureState,
-                       zencontrol: ZendureController)->None :
+                       bc: BridgeComponents) -> None :
         """ handling setting of SoC limits.
 
             The override is needed, as the value is scaled by the factor of 10.
@@ -36,4 +36,4 @@ class HASoCControl(HANumberControl):
         _properties = {
             _keys[0]: int(mqttpayload.decode())*10
         }
-        zencontrol.write_property(_properties)
+        self._get_zencontrol(bc).write_property(_properties)

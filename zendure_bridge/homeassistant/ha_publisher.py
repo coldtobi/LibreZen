@@ -15,8 +15,6 @@ from .ha_entity import HAEntity
 from .ha_control import HAControl
 from .ha_entities import HAENTITIES
 
-from ..zendure_protocols import ZendureController
-
 from ..device import ZendureState
 from ..bridge_components import BridgeComponents
 
@@ -32,11 +30,6 @@ class HAPublisher:
 
     _is_ready: bool = False # Connected to the HA Broker and sent all discoveries / availabilities -> we are ready to accept data.
 
-    @property
-    def _zencontrol(self) -> ZendureController:
-        assert self.bc.bridge is not None
-        return self.bc.bridge
-
     def __init__(self, bc: BridgeComponents) -> None:
         self.bc = bc
         # mqttconfig: MqttConfig, zendevice: ZendureDevice, zencontrol: ZendureController ) -> None:
@@ -47,10 +40,7 @@ class HAPublisher:
     # ----------#
 
     def start(self) -> None:
-        assert self.bc is not None
-        assert self.bc.bridge is not None
         mqttconfig = self.bc.config.mqtt
-        zencontrol = self.bc.bridge
         logger.info("connecting to homeassistant mqtt broker at %s ", mqttconfig.ha_broker)
 
         # keeping track of discovery / availability sent, to judge whether we are ready.
@@ -69,8 +59,8 @@ class HAPublisher:
         self._subscribe_topics: list[str] = []
         for haent in HAENTITIES:
             if isinstance(haent, HAControl) :
-                logger.info("command_topic: %s" , str(haent.get_command_topic(zencontrol)))
-                self._subscribe_topics.append(haent.get_command_topic(zencontrol))
+                logger.info("command_topic: %s" , str(haent.get_command_topic(self.bc)))
+                self._subscribe_topics.append(haent.get_command_topic(self.bc))
 
         self._client.loop_start()
         self._client.connect_async(mqttconfig.ha_broker, mqttconfig.ha_port)
@@ -103,8 +93,9 @@ class HAPublisher:
 
         for haentity in HAENTITIES:
             # send initial discovery and initial availability.
+            state = self.bc.bridge.get_zendure_state()
             self.publish_ha_discovery(haentity)
-            self.publish_availability(haentity, self._zencontrol.get_zendure_state())
+            self.publish_availability(haentity, state)
 
     def _on_publish(self,_client: mqtt.Client, _userdata: Any, mid: int) -> None:
         # Hack to get a "_is_ready" signal - tracking all discovery/availability
@@ -131,8 +122,8 @@ class HAPublisher:
         topic = message.topic
         state = self.bc.device.state
         for haent in HAENTITIES:
-            if isinstance(haent, HAControl) and topic == haent.get_command_topic(self._zencontrol):
-                haent.handle_command(message.payload, state, self._zencontrol)
+            if isinstance(haent, HAControl) and topic == haent.get_command_topic(self.bc):
+                haent.handle_command(message.payload, state, self.bc)
                 return
 
         logger.warning("received unexpected topic: %s", topic)
@@ -145,8 +136,8 @@ class HAPublisher:
     def publish_ha_discovery(self, haentity: HAEntity) -> None:
         logger.info("sending discovery for %s", haentity.name)
         mid = self._client.publish(
-            haentity.get_discovery_topic(self._zencontrol),
-            haentity.get_ha_json(self._zencontrol),
+            haentity.get_discovery_topic(self.bc),
+            haentity.get_ha_json(self.bc),
             retain=True)
         self.discovery_mid.append(mid.mid)
 
@@ -154,7 +145,7 @@ class HAPublisher:
     def unpublish_discoveries(self) -> None:
         for sensor in HAENTITIES:
             self._client.publish(
-                sensor.get_discovery_topic(self._zencontrol),
+                sensor.get_discovery_topic(self.bc),
                 payload="",
                 retain=True)
 
@@ -168,7 +159,7 @@ class HAPublisher:
         if payload is None:
             logger.debug("skipping state publish for %s, value is None", haentity.name)
             return
-        topic = haentity.get_state_topic(self._zencontrol)
+        topic = haentity.get_state_topic(self.bc)
         logger.debug("sending state for %s to %s, value %s", haentity.name, topic, payload)
         self._client.publish(topic, payload, retain=True)
 
@@ -181,8 +172,9 @@ class HAPublisher:
 
             availabilty will only be published if it has changed since the last time, or if always=True
         """
-        topic = haentity.get_availabilty_topic(self._zencontrol)
-        payload = "online" if haentity.is_available(state, self._zencontrol) else "offline"
+        topic = haentity.get_availabilty_topic(self.bc)
+        payload = "online" if haentity.is_available(state, self.bc) else "offline"
         logger.debug("Availabilty for %s is now %s", haentity.name, payload)
         mid = self._client.publish(topic, payload, retain=True)
         self.discovery_mid.append(mid.mid)
+

@@ -9,7 +9,6 @@
 from typing import Protocol, Any
 from abc import abstractmethod
 
-from zendure_bridge.bridge_context import BridgeContext
 from zendure_bridge.device import ZendureState
 
 
@@ -40,18 +39,9 @@ class ZendureCurrentStateProvider(Protocol):
         ...
 
 
-class ZendureContextProvider(Protocol):
-    """ Provides the BridgeContext Object - to easily obtain configuration objects. """
-    @abstractmethod
-    def get_bridge_context(self) -> BridgeContext:
-        ...
-
-
-
 class ZendureController(ZendurePropertyWriter,
                         ZendureCommandInvoker,
                         ZendureUpdateStateValue,
                         ZendureCurrentStateProvider,
-                        ZendureContextProvider,
                         Protocol):
     ...

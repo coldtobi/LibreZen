@@ -7,16 +7,16 @@
 # (at your option) any later version.
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 from typing import Any
 from dataclasses import dataclass
 
-from ..device import ZendureState, _PROPERTY_MAP
-from ..zendure_protocols import ZendureController
-
 from .ha_control import HAControl
 
+from ..device import ZendureState, _PROPERTY_MAP
+from ..bridge_components import BridgeComponents
 
 @dataclass
 class HANumberControl(HAControl):
@@ -35,8 +35,8 @@ class HANumberControl(HAControl):
     def ha_component_type(self) -> str:
         return "number"
 
-    def _build_ha_discovery_dict(self, zencontrol: ZendureController)-> dict[str, Any]:
-        _dict = super()._build_ha_discovery_dict(zencontrol)
+    def _build_ha_discovery_dict(self, bc: BridgeComponents) -> dict[str, Any]:
+        _dict = super()._build_ha_discovery_dict(bc)
         _extra = {
             'unit_of_measurement' : self.unit,
             'min' : self.min,
@@ -70,7 +70,7 @@ class HANumberControl(HAControl):
 
     def handle_command(self,
                        mqttpayload: bytes, zenstate: ZendureState,
-                       zencontrol: ZendureController) -> None:
+                       bc: BridgeComponents) -> None:
         """ Handle a numeric value sent from homeassistant to be sent to the zendure.
 
             This will just set the properties associated with the HAConrol, if some command
@@ -79,18 +79,17 @@ class HANumberControl(HAControl):
         try:
             if not self.is_syntetic:
                 properties = self._get_command_properties(mqttpayload)
-                zencontrol.write_property(properties)
+                self._get_zencontrol(bc).write_property(properties)
             else:
                 value = int(mqttpayload.decode())
                 if not self.min < value < self.max:
                     raise(ValueError)
-                zencontrol.update_state_value(self.field_name, value)
+                self._get_zencontrol(bc).update_state_value(self.field_name, value)
                 setattr(zenstate, self.field_name, value)
         except ValueError:
             logger.error(f"value %s for %s out of range: %d < xx < %d",
                          mqttpayload.decode(), self.field_name, self.min, self.max)
 
-    def is_available(self, _state: ZendureState, zencontrol: ZendureController) -> bool:
+    def is_available(self, _state: ZendureState, bc: BridgeComponents) -> bool:
         # expert controls are available only if expert_mode has been configured.
-        return ( not self.is_expert ) or zencontrol.get_bridge_context().haconfig.expert_mode
-
+        return ( not self.is_expert ) or bc.config.homeassistant.expert_mode

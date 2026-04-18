@@ -11,18 +11,18 @@ from typing import cast
 from .ha_number_control import HANumberControl
 
 from ..device import ZendureState
-from ..zendure_protocols import ZendureController
+from ..bridge_components import BridgeComponents
 
 @dataclass
 class HAAutoModelValueControl(HANumberControl):
 
-    def handle_command(self, mqttpayload:bytes, zenstate:ZendureState, zencontrol:ZendureController) -> None:
+    def handle_command(self, mqttpayload:bytes, zenstate:ZendureState, bc: BridgeComponents) -> None:
         """ call invoke function for the device automatin "automodel" 
 
             implemented only for autoModel 8 and 9.
         """
         oldvalue = zenstate.auto_model_value
-        super().handle_command(mqttpayload, zenstate, zencontrol)
+        super().handle_command(mqttpayload, zenstate, bc)
         if oldvalue == zenstate.auto_model_value:
             return
 
@@ -47,4 +47,4 @@ class HAAutoModelValueControl(HANumberControl):
         # help the type checker and then pass ints to the helper.
         assert isinstance(autoModel, int)
         arguments = ha_amsctrl._generate_invoke_parameters(amp, int(autoModel), amv)
-        zencontrol.invoke_function(arguments, "deviceAutomation")
+        self._get_zencontrol(bc).invoke_function(arguments, "deviceAutomation")

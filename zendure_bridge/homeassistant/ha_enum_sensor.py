@@ -10,8 +10,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from .ha_sensor import HASensor
+
 from ..device import ZendureState
-from ..zendure_protocols import ZendureController
+from ..bridge_components import BridgeComponents
 
 @dataclass
 class EnumSensor(HASensor):
@@ -22,10 +23,10 @@ class EnumSensor(HASensor):
     def get_display_value(self, state: ZendureState) -> str | None:
         numeric_value = self.get_value(state)
         if numeric_value is None:
-              return None
+            return None
         return self.lookup.get(numeric_value, "unknown")
 
-    def _build_ha_discovery_dict(self, zencontrol: ZendureController)-> dict[str, Any]:
-        _dict = super()._build_ha_discovery_dict(zencontrol)
+    def _build_ha_discovery_dict(self, bc: BridgeComponents)-> dict[str, Any]:
+        _dict = super()._build_ha_discovery_dict(bc)
         _dict['options'] = list(self.lookup.values())
         return _dict

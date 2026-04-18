@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 
 from dataclasses import dataclass
 
-from ..device import ZendureState
-from ..zendure_protocols import ZendureController
-
 from .ha_number_control import HANumberControl
+
+from ..device import ZendureState
+from ..bridge_components import BridgeComponents
 
 @dataclass
 class HAOutputLimitControl(HANumberControl):
@@ -23,17 +23,17 @@ class HAOutputLimitControl(HANumberControl):
         (needs to set acMode, therefore overriden)
     """
     def handle_command(self, mqttpayload: bytes, _zenstate: ZendureState,
-                       zencontrol: ZendureController) -> None:
+                       bc: BridgeComponents) -> None:
 
         try:
             _properties = self._get_command_properties(mqttpayload)
             _properties["acMode"] = 2
-            zencontrol.write_property(_properties)
+            self._get_zencontrol(bc).write_property(_properties)
         except ValueError:
             logger.error(f"value %s for %s out of range: %d < xx < %d",
                          mqttpayload.decode(), self.field_name, self.min, self.max)
 
-    def is_available(self, state:ZendureState, zencontrol:ZendureController)->bool:
-        if not super().is_available(state, zencontrol):
+    def is_available(self, state:ZendureState, bc: BridgeComponents ) -> bool:
+        if not super().is_available(state, bc):
             return False
         return state.auto_model == 0

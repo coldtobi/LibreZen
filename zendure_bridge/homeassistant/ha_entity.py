@@ -12,8 +12,10 @@ from typing import Any
 
 from dataclasses import dataclass, field
 
-from ..zendure_protocols import ZendureController
 from ..device import ZendureState
+
+from ..bridge_components import BridgeComponents
+from zendure_bridge.zendure_protocols import ZendureController
 
 @dataclass
 class HAEntity:
@@ -31,48 +33,48 @@ class HAEntity:
     def ha_component_type(self) -> str:
         raise NotImplementedError
 
-    def get_ha_json(self, zencontrol: ZendureController) -> str:
+    def _get_zencontrol(self, bc: BridgeComponents) -> ZendureController:
+        assert bc.bridge is not None
+        return bc.bridge
+
+    def get_ha_json(self, bc: BridgeComponents) -> str:
         """ generate JSON to advertise the HAEntity to homassistant.
 
             The call to this function consumes/resets the 'needs_re_discovery'.
         """
 
         self.needs_re_discovery = False
-        return json.dumps(self._build_ha_discovery_dict(zencontrol))
+        return json.dumps(self._build_ha_discovery_dict(bc))
 
-    def get_state_topic(self, zencontrol: ZendureController) -> str:
+    def get_state_topic(self, bc: BridgeComponents) -> str:
         """ generate mqtt topic string for homeassistant to publish a state """
-        ctx = zencontrol.get_bridge_context()
-        haconfig = ctx.haconfig
-        zenconfig = ctx.zenconfig
+        haconfig = bc.config.homeassistant
+        zenconfig = bc.config.zendure
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/state"
 
-    def get_discovery_topic(self, zencontrol: ZendureController) -> str:
+    def get_discovery_topic(self, bc: BridgeComponents) -> str:
         """ generate mqtt topic string for homeassistant to publish a discovery topic. """
-        ctx = zencontrol.get_bridge_context()
-        haconfig = ctx.haconfig
-        zenconfig = ctx.zenconfig
+        haconfig = bc.config.homeassistant
+        zenconfig = bc.config.zendure
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/config"
 
-    def get_availabilty_topic(self, zencontrol: ZendureController) -> str:
-        ctx = zencontrol.get_bridge_context()
-        haconfig = ctx.haconfig
-        zenconfig = ctx.zenconfig
+    def get_availabilty_topic(self, bc: BridgeComponents) -> str:
+        haconfig = bc.config.homeassistant
+        zenconfig = bc.config.zendure
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/availability"
 
-    def _build_ha_discovery_dict(self, zencontrol: ZendureController) -> dict[str, Any]:
+    def _build_ha_discovery_dict(self, bc: BridgeComponents) -> dict[str, Any]:
         """ build a dict containing all information for homeassisent's discovery of an entity.
 
             subclasses ammend this information, eg. to add HAControl specific information.
         """
-        ctx = zencontrol.get_bridge_context()
-        haconfig = ctx.haconfig
-        zenconfig = ctx.zenconfig
+        haconfig = bc.config.homeassistant
+        zenconfig = bc.config.zendure
 
         _dict = {
             'name': self.name,
-            'state_topic': self.get_state_topic(zencontrol),
-            'availability_topic': self.get_availabilty_topic(zencontrol),
+            'state_topic': self.get_state_topic(bc),
+            'availability_topic': self.get_availabilty_topic(bc),
             'unique_id': f"zendure_{zenconfig.device_id}_{self.field_name}",
             'device': {
                 "identifiers": [f"zendure_{zenconfig.device_id}"],
@@ -82,7 +84,7 @@ class HAEntity:
         }
         return _dict
 
-    def update(self, state: ZendureState, zencontrol: ZendureController) -> None:
+    def update(self, state: ZendureState, bc: BridgeComponents) -> None:
         pass
 
     def get_value(self, state: ZendureState) -> int | None:
@@ -121,13 +123,12 @@ class HAEntity:
 
         return False
 
-    def is_available(self, _state: ZendureState, _zencontrol: ZendureController) -> bool:
+    def is_available(self, _state: ZendureState, _bc: BridgeComponents) -> bool:
         return True  # default: immer verfügbar
 
-    def has_availability_changed(self, state: ZendureState, zencontrol: ZendureController) -> bool:
-        available = self.is_available(state, zencontrol)
+    def has_availability_changed(self, state: ZendureState, bc: BridgeComponents) -> bool:
+        available = self.is_available(state, bc)
         if available != self._last_availability:
             self._last_availability = available
             return True
         return False
-

@@ -13,8 +13,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from .ha_control import HAControl
-from ..zendure_protocols import ZendureController
+
 from ..device import ZendureState, _PROPERTY_MAP
+from ..bridge_components import BridgeComponents
 
 
 @dataclass
@@ -35,8 +36,8 @@ class HASwitchControl(HAControl):
     def ha_component_type(self) -> str:
         return "switch"
 
-    def _build_ha_discovery_dict(self, zencontrol: ZendureController) -> dict[str, Any]:
-        _dict = super()._build_ha_discovery_dict(zencontrol)
+    def _build_ha_discovery_dict(self, bc: BridgeComponents) -> dict[str, Any]:
+        _dict = super()._build_ha_discovery_dict(bc)
         # include explicit payloads so HA knows what to send
         _extra = {
             'payload_on': self.payload_on,
@@ -48,7 +49,7 @@ class HASwitchControl(HAControl):
         # represent the binary state as ON/OFF for Home Assistant
         val = self.get_value(state)
         if val is None:
-              return None
+            return None
         try:
             is_on = bool(int(val))
         except Exception:
@@ -63,7 +64,7 @@ class HASwitchControl(HAControl):
             return 0
         raise ValueError(f"Invalid payload for switch: {received}")
 
-    def handle_command(self, mqttpayload: bytes, zenstate: ZendureState, zencontrol: ZendureController) -> None:
+    def handle_command(self, mqttpayload: bytes, zenstate: ZendureState, bc: BridgeComponents) -> None:
         try:
             value = self._payload_to_int(mqttpayload)
 
@@ -72,15 +73,15 @@ class HASwitchControl(HAControl):
                 _keys = [key for key, val in _PROPERTY_MAP.items() if val == self.field_name]
                 assert len(_keys) == 1, "Property not found or duplicate definition."
                 properties = {_keys[0]: value}
-                zencontrol.write_property(properties)
+                self._get_zencontrol(bc).write_property(properties)
             else:
                 # update local state only
-                zencontrol.update_state_value(self.field_name, value)
+                self._get_zencontrol(bc).update_state_value(self.field_name, value)
                 setattr(zenstate, self.field_name, value)
 
         except (AssertionError, ValueError) as e:
             logger.error("Error handling switch command for %s: %s", self.field_name, e)
 
-    def is_available(self, _state: ZendureState, zencontrol: ZendureController) -> bool:
+    def is_available(self, _state: ZendureState, bc: BridgeComponents) -> bool:
         # expert controls are available only if expert_mode has been configured.
-        return (not self.is_expert) or zencontrol.get_bridge_context().haconfig.expert_mode
+        return (not self.is_expert) or bc.config.homeassistant.expert_mode

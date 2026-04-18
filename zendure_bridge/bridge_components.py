@@ -20,7 +20,21 @@ if TYPE_CHECKING:
 class BridgeComponents:
 
     config: BridgeConfig
-    device: ZendureDevice | None = None
-    ha_publisher: HAPublisherProtocols | None = None
-    bridge: ZendureController | None = None
+    _device: ZendureDevice | None = None
+    _ha_publisher: HAPublisherProtocols | None = None
+    _bridge: ZendureController | None = None
 
+    @property
+    def device(self) -> ZendureDevice:
+        assert self._device is not None
+        return self._device
+
+    @property
+    def ha_publisher(self) -> HAPublisherProtocols:
+        assert self._ha_publisher is not None
+        return self._ha_publisher
+
+    @property
+    def bridge(self) -> ZendureController:
+        assert self._bridge is not None
+        return self._bridge

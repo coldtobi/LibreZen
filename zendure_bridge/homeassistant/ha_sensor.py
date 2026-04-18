@@ -9,8 +9,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from ..zendure_protocols import ZendureController
 from .ha_entity import HAEntity
+from zendure_bridge.bridge_components import BridgeComponents
 
 
 @dataclass
@@ -24,9 +24,9 @@ class HASensor(HAEntity):
     def ha_component_type(self) -> str:
         return "sensor"
 
-    def _build_ha_discovery_dict(self, zencontrol: ZendureController) -> dict[str, Any]:
+    def _build_ha_discovery_dict(self, bc: BridgeComponents) -> dict[str, Any]:
 
-        _dict = super()._build_ha_discovery_dict(zencontrol)
+        _dict = super()._build_ha_discovery_dict(bc)
         _dict['device_class'] = self.device_class
         if self.unit:
             _dict['unit_of_measurement'] = self.unit

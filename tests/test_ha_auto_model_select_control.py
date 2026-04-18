@@ -38,7 +38,7 @@ def test_handle_command_invokes_deviceAutomation() -> None:
 
     # send payload corresponding to lookup value for automodel 9
     payload = ctrl.lookup[9].encode()
-    ctrl.handle_command(payload, state, mock)
+    ctrl.handle_command(payload, state, mock.bc)
 
     # defaults should have been set
     assert mock.get_zendure_state().auto_model_program == 1

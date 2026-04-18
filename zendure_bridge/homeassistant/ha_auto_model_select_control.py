@@ -22,8 +22,9 @@ import logging
 from dataclasses import dataclass
 
 from .ha_select_control import HASelectControl
+
 from ..device import ZendureState
-from ..zendure_protocols import ZendureController
+from ..bridge_components import BridgeComponents
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +54,10 @@ class HAAutoModelSelectControl(HASelectControl):
         return arguments
 
 
-    def handle_command(self, mqttpayload:bytes, zenstate:ZendureState, zencontrol:ZendureController) -> None:
+    def handle_command(self, mqttpayload:bytes, zenstate:ZendureState, bc: BridgeComponents) -> None:
         autoModelProgram = zenstate.auto_model_program
         autoModelValue = zenstate.auto_model_value
+        zencontrol = self._get_zencontrol(bc)
         # Use default values if not set (this functionality is debug/development only, as this whole class is only for development and testing purposes.)
         if autoModelProgram is None:
             autoModelProgram = 1

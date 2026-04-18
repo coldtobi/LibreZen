@@ -17,28 +17,28 @@ import json
 def test_sensor_get_discovery_topic() -> None:
     sensor = HASensor("TestSensor", "solar_input_power", "W", "power")
     mock = BridgeMock()
-    topic = sensor.get_discovery_topic(mock)
+    topic = sensor.get_discovery_topic(mock.bc)
     assert topic == "homeassistant_python_tests/sensor/zendure_12345678_solar_input_power/config"
 
 
 def test_sensor_get_state_topic() -> None:
     sensor = HASensor("TestSensor", "solar_input_power", "W", "power")
     mock = BridgeMock()
-    topic = sensor.get_state_topic(mock)
+    topic = sensor.get_state_topic(mock.bc)
     assert topic == "homeassistant_python_tests/sensor/zendure_12345678_solar_input_power/state"
 
 
 def test_sensor_get_ha_json() -> None:
     sensor = HASensor("TestSensor", "solar_input_power", "W", "power")
     mock = BridgeMock()
-    zen_device_id = mock.get_bridge_context().zenconfig.device_id
+    zen_device_id = mock.bc.config.zendure.device_id
 
-    result = json.loads(sensor.get_ha_json(mock))
+    result = json.loads(sensor.get_ha_json(mock.bc))
     assert result["name"] == "TestSensor"
     assert result["unit_of_measurement"] == "W"
     assert result["device_class"] == "power"
-    assert result["state_topic"] == sensor.get_state_topic(mock)
-    assert result["availability_topic"] == sensor.get_availabilty_topic(mock)
+    assert result["state_topic"] == sensor.get_state_topic(mock.bc)
+    assert result["availability_topic"] == sensor.get_availabilty_topic(mock.bc)
     assert result["unique_id"] == f"zendure_{zen_device_id}_solar_input_power"
     assert result["device"]["identifiers"] == [f"zendure_{zen_device_id}"]
 

@@ -15,18 +15,18 @@ def test_batterysensor_update() -> None:
     # Arrange
     bm = BridgeMock()
     sensor = BatterySensor("Battery Charge Power", "battery_charge_power", "W", "power")
-    state = bm.bc.device.state # type: ignore
+    state = bm.bc.device.state
     state.pack_input_power = 0
     state.output_pack_power = 0
     state.output_home_power = 0
     state.solar_input_power = 0
-    sensor.update(state, bm)
+    sensor.update(state, bm.bc)
 
     # Test if power is 0
     assert state.battery_charge_power == 0
 
     # Ensure that the global state has been update as well.
-    permastate = bm.bc.device.state # type: ignore
+    permastate = bm.bc.device.state
     assert state.battery_charge_power == permastate.battery_charge_power
 
     # Set Input power over the "cut off" number and check if that is echoed.
@@ -34,11 +34,11 @@ def test_batterysensor_update() -> None:
     state.output_pack_power = 0
     state.output_home_power = 200
     state.solar_input_power = 200
-    sensor.update(state, bm)
+    sensor.update(state, bm.bc)
     assert state.battery_charge_power == -100
 
     # Ensure that the global state has been update as well.
-    permastate = bm.bc.device.state # type: ignore
+    permastate = bm.bc.device.state
     assert state.battery_charge_power == permastate.battery_charge_power
 
     # Set Output power over the "cut off" number and check if that is echoed.
@@ -46,11 +46,11 @@ def test_batterysensor_update() -> None:
     state.output_pack_power = 100
     state.output_home_power = 200
     state.solar_input_power = 200
-    sensor.update(state, bm)
+    sensor.update(state, bm.bc)
     assert state.battery_charge_power == 100
 
     # Ensure that the global state has been update as well.
-    permastate = bm.bc.device.state # type: ignore
+    permastate = bm.bc.device.state
     assert state.battery_charge_power == permastate.battery_charge_power
 
     # Set Input power below the "cut off" number and check if that is echoed.
@@ -58,11 +58,11 @@ def test_batterysensor_update() -> None:
     state.output_pack_power = 0
     state.output_home_power = 0
     state.solar_input_power = 20
-    sensor.update(state, bm)
+    sensor.update(state, bm.bc)
     assert state.battery_charge_power == 20
 
     # Ensure that the global state has been update as well.
-    permastate = bm.bc.device.state # type: ignore
+    permastate = bm.bc.device.state
     assert state.battery_charge_power == permastate.battery_charge_power
 
     # Set Output power over the "cut off" number and check if that is echoed.
@@ -70,11 +70,11 @@ def test_batterysensor_update() -> None:
     state.output_pack_power = 0
     state.output_home_power = 20
     state.solar_input_power = 0
-    sensor.update(state, bm)
+    sensor.update(state, bm.bc)
     assert state.battery_charge_power == -20
 
     # Ensure that the global state has been update as well.
-    permastate = bm.bc.device.state # type: ignore
+    permastate = bm.bc.device.state
     assert state.battery_charge_power == permastate.battery_charge_power
 
     # Ensure has_changed works.
@@ -85,5 +85,5 @@ def test_batterysensor_update() -> None:
     assert sensor.get_value(state) == state.battery_charge_power
 
     # Ensure that the global state has been update as well.
-    permastate = bm.bc.device.state # type: ignore
+    permastate = bm.bc.device.state
     assert state.battery_charge_power == permastate.battery_charge_power

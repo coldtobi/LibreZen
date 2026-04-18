@@ -9,13 +9,14 @@
 from dataclasses import dataclass
 
 from .ha_sensor import HASensor
+
 from ..device import ZendureState
-from ..zendure_protocols import ZendureController
+from ..bridge_components import BridgeComponents
 
 @dataclass
 class BatterySensor(HASensor):
 
-    def update(self, state: ZendureState, zencontrol: ZendureController)-> None:
+    def update(self, state: ZendureState, bc: BridgeComponents) -> None:
         # pack_input_power -> DISCHARGE power
         # output_pack_power -> CHARGE power.
         input_power = state.pack_input_power
@@ -38,4 +39,4 @@ class BatterySensor(HASensor):
         # update both the state snapshot and the global state
         # (as bat_pwr is syntentic, not from the device)
         state.battery_charge_power = _bat_pwr
-        zencontrol.update_state_value(self.field_name, _bat_pwr)
+        self._get_zencontrol(bc).update_state_value(self.field_name, _bat_pwr)

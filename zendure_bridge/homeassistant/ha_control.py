@@ -11,23 +11,23 @@ from typing import Any
 
 from .ha_entity import HAEntity
 
-from ..zendure_protocols import ZendureController
 from ..device import ZendureState
+from ..bridge_components import BridgeComponents
 
 @dataclass
 class HAControl(HAEntity):
     """ Baseclass for Control Entities for Homeassistant """
 
-    def _build_ha_discovery_dict(self, zencontrol: ZendureController)-> dict[str, Any]:
-        _dict = super()._build_ha_discovery_dict(zencontrol)
-        _dict['command_topic'] = self.get_command_topic(zencontrol)
+    def _build_ha_discovery_dict(self, bc: BridgeComponents) -> dict[str, Any]:
+        _dict = super()._build_ha_discovery_dict(bc)
+        _dict['command_topic'] = self.get_command_topic(bc)
         return _dict
 
-    def get_command_topic(self, zencontrol: ZendureController) -> str:
+    def get_command_topic(self, bc: BridgeComponents) -> str:
         """ assemble the MQTT topic to control this HAControl. """
-        haconfig = zencontrol.get_bridge_context().haconfig
-        zenconfig = zencontrol.get_bridge_context().zenconfig
+        haconfig = bc.config.homeassistant
+        zenconfig = bc.config.zendure
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/set"
 
-    def handle_command(self, _mqttpayload: bytes, _zenstate: ZendureState, _zencontrol: ZendureController) -> None:
+    def handle_command(self, _mqttpayload: bytes, _zenstate: ZendureState, bc: BridgeComponents) -> None:
         raise NotImplementedError
