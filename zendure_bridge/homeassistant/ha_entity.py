@@ -27,7 +27,6 @@ class HAEntity:
     _last_availability: bool = field(default=True, init=False) # for the change detection of the availablity.
 
     _cached_display_value: int | str | None = field(default=None, init=False)
-    needs_re_discovery: bool = field(default=False, init=False) # discovery information has changed, needs to be re-sent
 
     @property
     def ha_component_type(self) -> str:
@@ -38,12 +37,7 @@ class HAEntity:
         return bc.bridge
 
     def get_ha_json(self, bc: BridgeComponents) -> str:
-        """ generate JSON to advertise the HAEntity to homassistant.
-
-            The call to this function consumes/resets the 'needs_re_discovery'.
-        """
-
-        self.needs_re_discovery = False
+        """ generate JSON to advertise the HAEntity to homassistant. """
         return json.dumps(self._build_ha_discovery_dict(bc))
 
     def get_state_topic(self, bc: BridgeComponents) -> str:

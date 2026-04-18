@@ -58,10 +58,10 @@ class HAInvMaxPowerControl(HANumberControl):
         # re-set the homeassistant control's max if required.
         if outputlimit.max != inverse_max_power:
             outputlimit.max = inverse_max_power
-            outputlimit.needs_re_discovery = True  # FIXME implement protocol for re-discovery of entities, as this is a bit hacky.
+            bc.ha_publisher.publish_ha_discovery(outputlimit)
 
         # hack: if the control is disabled (expert mode off), show as box
         # as sliders won't display numeric values.
         if (not self.is_available(state, bc)) and (self.display_mode != "box"):
             self.display_mode = "box"
-            self.needs_re_discovery = True # FIXME implement protocol for re-discovery of entities, as this is a bit hacky.
+            bc.ha_publisher.publish_ha_discovery(self)

@@ -141,12 +141,10 @@ class ZendureBridge:
                 if haentity.has_changed(state):
                     self.bc.ha_publisher.publish_state(haentity, state)
 
-        # check if discoveries or availabilties needs updates.
+        # check if availabilties needs updates.
         for haentity in HAENTITIES:
             if haentity.has_availability_changed(state, self.bc):
                 self.bc.ha_publisher.publish_availability(haentity, state)
-            if haentity.needs_re_discovery:
-                self.bc.ha_publisher.publish_ha_discovery(haentity)
 
         self.has_pending_changes = False
 
