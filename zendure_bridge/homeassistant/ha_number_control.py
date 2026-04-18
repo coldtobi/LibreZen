@@ -28,12 +28,24 @@ class HANumberControl(HAControl):
     device_class: str   # HA device_class: "power", "battery", "energy"
     display_mode: str = "auto"    # "auto", "box" or "slider"
 
-    is_expert: bool = False
-    is_syntetic: bool = False   # not a property of the zendure device, so don't send it to it.
+    _is_expert: bool = False
+    _is_synthetic: bool = False   # not a property of the zendure device, so don't send it to it.
+
 
     @property
     def ha_component_type(self) -> str:
         return "number"
+
+
+    @property
+    def is_expert(self) -> bool:
+        return self._is_expert
+
+
+    @property
+    def is_synthetic(self) -> bool:
+        return self._is_synthetic
+
 
     def _build_ha_discovery_dict(self, bc: BridgeComponents) -> dict[str, Any]:
         _dict = super()._build_ha_discovery_dict(bc)
@@ -77,7 +89,7 @@ class HANumberControl(HAControl):
             needs extra properties to be set, needs to be overriden.
         """
         try:
-            if not self.is_syntetic:
+            if not self.is_synthetic:
                 properties = self._get_command_properties(mqttpayload)
                 self._get_zencontrol(bc).write_property(properties)
             else:

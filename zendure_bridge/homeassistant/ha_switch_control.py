@@ -27,14 +27,25 @@ class HASwitchControl(HAControl):
     in _PROPERTY_MAP) and call `zencontrol.write_property` with the integer value (1/0).
     """
 
-    is_expert: bool = False
-    is_syntetic: bool = False
+    _is_expert: bool = False
+    _is_synthetic: bool = False
     payload_on: str = "ON"
     payload_off: str = "OFF"
 
     @property
     def ha_component_type(self) -> str:
         return "switch"
+
+
+    @property
+    def is_expert(self) -> bool:
+        return self._is_expert
+
+
+    @property
+    def is_synthetic(self) -> bool:
+        return self._is_synthetic
+
 
     def _build_ha_discovery_dict(self, bc: BridgeComponents) -> dict[str, Any]:
         _dict = super()._build_ha_discovery_dict(bc)
@@ -68,7 +79,7 @@ class HASwitchControl(HAControl):
         try:
             value = self._payload_to_int(mqttpayload)
 
-            if not self.is_syntetic:
+            if not self.is_synthetic:
                 # find corresponding Zendure property key
                 _keys = [key for key, val in _PROPERTY_MAP.items() if val == self.field_name]
                 assert len(_keys) == 1, "Property not found or duplicate definition."

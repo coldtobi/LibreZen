@@ -22,13 +22,9 @@ from typing import Any
 
 import paho.mqtt.client as mqtt
 
-from .version import __version__
-
-from .device import ZendureState
 from .bridge_components import BridgeComponents
 
 from .homeassistant.ha_entities import HAENTITIES
-from .homeassistant.ha_publisher_protocols import HAPublisherProtocols
 
 logger = logging.getLogger(__name__)
 

@@ -22,15 +22,23 @@ class HAEntity:
     """ Baseclass for HA entities, like sensors and control items. """
 
     name: str            # human readable caption for Homeassistant.
-    field_name: str      # fiels of the dataclass ZendureState-Feldname, including for syntetic, derived sensors or controls.
+    field_name: str      # fiels of the dataclass ZendureState-Feldname, including for synthetic, derived sensors or controls.
 
-    _last_availability: bool = field(default=True, init=False) # for the change detection of the availablity.
+    _last_availability: bool = field(default=True, init=False) # for the change detection of the availability.
 
     _cached_display_value: int | str | None = field(default=None, init=False)
 
     @property
     def ha_component_type(self) -> str:
         raise NotImplementedError
+
+    @property
+    def is_expert(self) -> bool:
+        return False
+
+    @property
+    def is_synthetic(self) -> bool:
+        return False
 
     def _get_zencontrol(self, bc: BridgeComponents) -> ZendureController:
         assert bc.bridge is not None
@@ -117,8 +125,12 @@ class HAEntity:
 
         return False
 
-    def is_available(self, _state: ZendureState, _bc: BridgeComponents) -> bool:
-        return True  # default: immer verfügbar
+    def is_available(self, state: ZendureState, _bc: BridgeComponents) -> bool:
+        """ calculate availability based on whether we know the device state.
+
+            If a entity is syntetic, we assume it is always available by default.
+        """
+        return True if self.is_synthetic or self.get_value(state) is not None else False
 
     def has_availability_changed(self, state: ZendureState, bc: BridgeComponents) -> bool:
         available = self.is_available(state, bc)

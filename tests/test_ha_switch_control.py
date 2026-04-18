@@ -36,7 +36,7 @@ def test_haswitch_get_ha_json_contains_payloads_and_command() -> None:
 
 def test_haswitch_handle_command_synthetic_updates_state() -> None:
     # Synthetic controls should update only the local state via update_state_value
-    sensor = HASwitchControl("Master Switch", "master_switch", is_syntetic=True)
+    sensor = HASwitchControl("Master Switch", "master_switch", _is_synthetic=True)
     mock = BridgeMock()
     zenstate = mock.get_zendure_state()
 
@@ -47,10 +47,13 @@ def test_haswitch_handle_command_synthetic_updates_state() -> None:
     # ensure device global state was updated
     assert mock.get_zendure_state().master_switch == 1
 
+    # ensure that the last written properties were not updated (since it's synthetic)
+    assert mock.last_written is None
+
 
 def test_haswitch_handle_command_non_synthetic_writes_property() -> None:
     # Non-Synthetic controls should via write_properties.
-    sensor = HASwitchControl("Buzzer", "buzzer_switch", is_syntetic=False)
+    sensor = HASwitchControl("Buzzer", "buzzer_switch", _is_synthetic=False)
     mock = BridgeMock()
     zenstate = mock.get_zendure_state()
 
