@@ -6,8 +6,6 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-from json import dumps as json_dumps
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -34,7 +32,3 @@ class HASensor(HAEntity):
             _dict['unit_of_measurement'] = self.unit
 
         return _dict
-
-    def get_ha_json(self, zencontrol: ZendureController) -> str:
-        """ generate JSON to advertise Sensor defintion (json) to homassistant."""
-        return json_dumps(self._build_ha_discovery_dict(zencontrol))
