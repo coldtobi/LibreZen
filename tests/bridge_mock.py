@@ -11,23 +11,28 @@ import os
 
 from zendure_bridge.device import ZendureState, ZendureDevice
 from zendure_bridge.bridge_context import BridgeContext
+from zendure_bridge.bridge_components import BridgeComponents
 import zendure_bridge
 
 class BridgeMock():
 
+    bc: BridgeComponents
+
     def __init__(self) -> None:
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        self.bridgeconfig = zendure_bridge.config.load(f"{dir_path}/config.yaml")
-        assert self.bridgeconfig.homeassistant.discovery_prefix == "homeassistant_python_tests"
-        z = self.bridgeconfig.zendure
-        self.device = ZendureDevice(z.device_id)
+        bridgeconfig = zendure_bridge.config.load(f"{dir_path}/config.yaml")
+        assert bridgeconfig.homeassistant.discovery_prefix == "homeassistant_python_tests"
+        self.bc = BridgeComponents(bridgeconfig)
+        self.bc.device = ZendureDevice(self.bc)
+        self.bc.bridge = self
+
         # capture last interactions for tests
         self.last_written: dict[str, Any] | None = None
         self.last_invoked: dict[str, Any] | None = None
 
     def update_state_value(self, field_name: str, value: int) -> None:
         """ allows updating the state object with a new value, thread safe. """
-        self.device.update_value(field_name, value)
+        self.bc.device.update_value(field_name, value) # type: ignore
 
     def write_property(self, propetries: dict[str, Any], persistent: bool = False) -> None:
         """Mock implementation that records the last written properties.
@@ -45,7 +50,7 @@ class BridgeMock():
         pass
 
     def get_zendure_state(self) -> ZendureState:
-        return self.device.state
+        return self.bc.device.state # type: ignore
 
     def get_bridge_context(self) -> BridgeContext:
-        return BridgeContext(self.bridgeconfig.zendure, self.bridgeconfig.homeassistant)
+        return BridgeContext(self.bc.config.zendure, self.bc.config.homeassistant)

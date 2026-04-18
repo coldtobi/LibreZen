@@ -23,12 +23,10 @@ from typing import Any
 import paho.mqtt.client as mqtt
 
 from .version import __version__
-from .config import BridgeConfig
-from .config import load as load_config
-from .device import ZendureDevice, ZendureState
-from .bridge_context import BridgeContext
 
-from zendure_bridge.homeassistant.ha_publisher import HAPublisher
+from .device import ZendureState
+from .bridge_context import BridgeContext
+from .bridge_components import BridgeComponents
 
 from .homeassistant.ha_entities import HAENTITIES
 
@@ -59,30 +57,41 @@ class ZendureBridge:
 
     """
 
+    bc: BridgeComponents
+
     lastMessageID : int = 0  # Message counter for the chatting.
     has_pending_changes: bool = False # Some changes could not be forwarded to ha_publish (because it was not ready)
     _get_all_props_timer = None  # Timer to schedule "_get_all_properties"
 
-    def __init__(self, config: BridgeConfig) -> None:
-        self.config = config
-        self.device = ZendureDevice(config.zendure.device_id)
+    def __init__(self, bc: BridgeComponents) -> None:
+        self.bc = bc
 
-        self._client = mqtt.Client(client_id=config.mqtt.client_id)
-        self._client.username_pw_set(config.mqtt.username, config.mqtt.password)
-        self._client.on_connect = self._on_connect
-        self._client.on_disconnect = self._on_disconnect
-        self._client.on_message = self._on_message
 
-        self._hapublisher = HAPublisher(config.mqtt, self.device, self)
+    # ------------------------------------------------------------------ #
+    # Lifecycle                                                          #
+    # ------------------------------------------------------------------ #
+
+    def start(self) -> None:
+        assert self.bc is not None
+        assert self.bc.device is not None
+        assert self.bc.ha_publisher is not None
 
         # Subscribe pattern covering all device topics
-        z = config.zendure
+        z = self.bc.config.zendure
         self._subscribe_topics = [
             f"/{z.app_key}/{z.device_id}/#",   # device → cloud (status, events)
             f"iot/{z.app_key}/{z.device_id}/#", # cloud → device (commands)
             # "#",  # temporär: alles mitschneiden
         ]
 
+        self._client = mqtt.Client(client_id=self.bc.config.mqtt.client_id)
+        self._client.connect_async(self.bc.config.mqtt.broker, self.bc.config.mqtt.port)
+        self._client.reconnect_delay_set(min_delay=10, max_delay=300)
+        self._client.loop_start()
+
+    def stop(self) -> None:
+        logger.info("Shutting down")
+        self._client.disconnect()
 
 
     # ------------------------------------------------------------------ #
@@ -93,7 +102,7 @@ class ZendureBridge:
         if rc != 0:
             logger.error("MQTT connect failed, rc=%d", rc)
             return
-        logger.info("Connected to MQTT broker %s:%d", self.config.mqtt.broker, self.config.mqtt.port)
+        logger.info("Connected to MQTT broker %s:%d", self.bc.config.mqtt.broker, self.bc.config.mqtt.port)
         for topic in self._subscribe_topics:
             client.subscribe(topic)
             logger.info("Subscribed to %s", topic)
@@ -110,15 +119,21 @@ class ZendureBridge:
         self.has_pending_changes = False  # invalidate stale data.
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, message: mqtt.MQTTMessage) -> None:
+        assert self.bc is not None
+        assert self.bc.device is not None
+        assert self.bc.ha_publisher is not None
+        device = self.bc.device
+        hapublisher = self.bc.ha_publisher
+
         topic = message.topic
         logger.debug("← %s (%d bytes)", topic, len(message.payload))
         logger.debug("  %s" , message.payload)
 
-        changed = self.device.update_from_payload(topic, message.payload)
-        state = self.device.state
+        changed = device.update_from_payload(topic, message.payload)
+        state = device.state
 
         # defer processing if HAPublisher is not yet ready
-        if not self._hapublisher.is_ready and changed:
+        if not hapublisher.is_ready and changed:
             logger.info("HAPublisher not yet ready -- defering processing updates.")
             self.has_pending_changes = True
             return
@@ -135,34 +150,17 @@ class ZendureBridge:
             # Publish changed haentity values to homeassistant.
             for haentity in HAENTITIES:
                 if haentity.has_changed(state):
-                    self._hapublisher.publish_state(haentity, state)
+                    hapublisher.publish_state(haentity, state)
 
         # check if discoveries or availabilties needs updates.
         for haentity in HAENTITIES:
             if haentity.has_availability_changed(state, self):
-                self._hapublisher.publish_availablity(haentity, state)
+                hapublisher.publish_availablity(haentity, state)
             if haentity.needs_re_discovery:
-                self._hapublisher.publish_ha_discovery(haentity)
+                hapublisher.publish_ha_discovery(haentity)
 
         self.has_pending_changes = False
 
-
-    # ------------------------------------------------------------------ #
-    # Lifecycle                                                          #
-    # ------------------------------------------------------------------ #
-
-    def start(self) -> None:
-        logger.info("zendure-bridge %s starting", __version__)
-        self._hapublisher.start()
-
-        self._client.connect_async(self.config.mqtt.broker, self.config.mqtt.port)
-        self._client.reconnect_delay_set(min_delay=10, max_delay=300)
-        self._client.loop_start()
-
-    def stop(self) -> None:
-        logger.info("Shutting down")
-        self._client.disconnect()
-        self._hapublisher.stop()
 
     # ------------------------------------------------------------------ #
     # Protocols                                                          #
@@ -173,7 +171,7 @@ class ZendureBridge:
         # topic to send to:
         # "iot/<app_key>/<device_id>/properties/write"
         topic = ( "iot/"
-                  f"{self.config.zendure.app_key}/{self.config.zendure.device_id}"
+                  f"{self.bc.config.zendure.app_key}/{self.bc.config.zendure.device_id}"
                   "/properties/write" )
 
         self.lastMessageID += 1
@@ -186,8 +184,8 @@ class ZendureBridge:
 
         payload = {
             'messageId': self.lastMessageID,
-            'product': self.config.zendure.product,
-            'deviceId': self.config.zendure.device_id,
+            'product': self.bc.config.zendure.product,
+            'deviceId': self.bc.config.zendure.device_id,
             'timestamp': int(time.time() * 1000),
             'properties': properties
         }
@@ -199,12 +197,12 @@ class ZendureBridge:
             by the caller.
         """
         topic = ( "iot/"
-          f"{self.config.zendure.app_key}/{self.config.zendure.device_id}"
+          f"{self.bc.config.zendure.app_key}/{self.bc.config.zendure.device_id}"
           "/function/invoke" )
         self.lastMessageID += 1
         payload = {
             'arguments' : [arguments],
-            'deviceKey':  self.config.zendure.device_id,
+            'deviceKey':  self.bc.config.zendure.device_id,
             'function':  function,
             'messageId': self.lastMessageID,
             'timestamp': int(time.time() * 1000)
@@ -220,14 +218,14 @@ class ZendureBridge:
         """
 
         topic = ( "iot/"
-                  f"{self.config.zendure.app_key}/{self.config.zendure.device_id}"
+                  f"{self.bc.config.zendure.app_key}/{self.bc.config.zendure.device_id}"
                   "/properties/read" )
 
         self.lastMessageID += 1
         _dict = {
            'timestamp': int(time.time() * 1000),
            'messageId': self.lastMessageID,
-           'deviceId': self.config.zendure.device_id,
+           'deviceId': self.bc.config.zendure.device_id,
            'properties': [
                 "getAll"
                ]
@@ -237,18 +235,20 @@ class ZendureBridge:
 
         if self._get_all_props_timer:
             self._get_all_props_timer.cancel()
-        if self.config.zendure.get_all_properties_interval > 0:
-            self._get_all_props_timer = threading.Timer(self.config.zendure.get_all_properties_interval, self._get_all_properties)
+        if self.bc.config.zendure.get_all_properties_interval > 0:
+            self._get_all_props_timer = threading.Timer(self.bc.config.zendure.get_all_properties_interval, self._get_all_properties)
             self._get_all_props_timer.start()
 
 
     def update_state_value(self, field_name: str, value: int) -> None:
         """ allows updating the state object with a new value, thread safe. """
-        self.device.update_value(field_name, value)
+        assert self.bc.device is not None
+        self.bc.device.update_value(field_name, value)
 
     def get_zendure_state(self) -> ZendureState:
         """ get a (fresh) copy of the current state """
-        return self.device.state
+        assert self.bc.device is not None
+        return self.bc.device.state
 
     def get_bridge_context(self) -> BridgeContext:
-        return BridgeContext(self.config.zendure, self.config.homeassistant)
+        return BridgeContext(self.bc.config.zendure, self.bc.config.homeassistant)

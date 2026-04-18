@@ -20,6 +20,10 @@ import threading
 from dataclasses import dataclass, field
 from typing import Any
 
+
+from .bridge_components import BridgeComponents
+from .config import ZendureConfig
+
 logger = logging.getLogger(__name__)
 
 
@@ -220,8 +224,9 @@ class ZendureDevice:
     Read state via the .state property (returns a snapshot copy).
     """
 
-    def __init__(self, device_id: str) -> None:
-        self.device_id = device_id
+    def __init__(self, bc: BridgeComponents) -> None:
+        assert bc is not None, "BridgeComponents.config must be set"
+        self.device_id = bc.config.zendure.device_id
         self._state = ZendureState()
         self._lock = threading.Lock()
         self._message_count = 0

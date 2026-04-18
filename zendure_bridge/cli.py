@@ -16,7 +16,9 @@ from typing import Any
 from .version import __version__
 from .config import load as load_config
 from .bridge import setup_logging, ZendureBridge
-
+from .device import ZendureDevice
+from zendure_bridge.homeassistant.ha_publisher import HAPublisher
+from .bridge_components import BridgeComponents
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -39,7 +41,10 @@ def main() -> None:
 
     setup_logging(config.log_level, config.log_file)
 
-    bridge = ZendureBridge(config)
+    bc = BridgeComponents(config=config)
+    bc.device = ZendureDevice(bc)
+    bc.bridge = bridge = ZendureBridge(bc)
+    bc.ha_publisher = ha_publisher = HAPublisher(bc)
 
     # Graceful shutdown on Ctrl-C or SIGTERM
     def _signal_handler(sig: int, frame: Any) -> None:
@@ -50,6 +55,7 @@ def main() -> None:
     signal.signal(signal.SIGTERM, _signal_handler)
 
     bridge.start()
+    ha_publisher.start()
 
     signal.pause()
 
