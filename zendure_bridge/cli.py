@@ -42,9 +42,9 @@ def main() -> None:
     setup_logging(config.log_level, config.log_file)
 
     bc = BridgeComponents(config=config)
-    bc._device = ZendureDevice(bc)
-    bc._bridge = bridge = ZendureBridge(bc)
-    bc._ha_publisher = ha_publisher = HAPublisher(bc)
+    bc.device = ZendureDevice(bc)
+    bc.bridge = bridge = ZendureBridge(bc)
+    bc.ha_publisher = ha_publisher = HAPublisher(bc)
 
     # Graceful shutdown on Ctrl-C or SIGTERM
     def _signal_handler(sig: int, frame: Any) -> None:

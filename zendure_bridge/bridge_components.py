@@ -29,12 +29,24 @@ class BridgeComponents:
         assert self._device is not None
         return self._device
 
+    @device.setter
+    def device(self, value: ZendureDevice) -> None:
+        self._device = value
+
     @property
     def ha_publisher(self) -> HAPublisherProtocols:
         assert self._ha_publisher is not None
         return self._ha_publisher
 
+    @ha_publisher.setter
+    def ha_publisher(self, value: HAPublisherProtocols) -> None:
+        self._ha_publisher = value
+
     @property
     def bridge(self) -> ZendureController:
         assert self._bridge is not None
         return self._bridge
+
+    @bridge.setter
+    def bridge(self, value: ZendureController) -> None:
+        self._bridge = value

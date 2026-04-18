@@ -22,8 +22,8 @@ class BridgeMock():
         bridgeconfig = zendure_bridge.config.load(f"{dir_path}/config.yaml")
         assert bridgeconfig.homeassistant.discovery_prefix == "homeassistant_python_tests"
         self.bc = BridgeComponents(bridgeconfig)
-        self.bc._device = ZendureDevice(self.bc)
-        self.bc._bridge = self
+        self.bc.device = ZendureDevice(self.bc)
+        self.bc.bridge = self
 
         # capture last interactions for tests
         self.last_written: dict[str, Any] | None = None
