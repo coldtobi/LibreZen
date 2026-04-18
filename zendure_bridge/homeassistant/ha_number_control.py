@@ -84,7 +84,7 @@ class HANumberControl(HAControl):
                 value = int(mqttpayload.decode())
                 if not self.min < value < self.max:
                     raise(ValueError)
-                self._get_zencontrol(bc).update_state_value(self.field_name, value)
+                bc.device.update_value(self.field_name, value)
                 setattr(zenstate, self.field_name, value)
         except ValueError:
             logger.error(f"value %s for %s out of range: %d < xx < %d",

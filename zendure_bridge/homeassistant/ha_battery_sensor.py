@@ -39,4 +39,4 @@ class BatterySensor(HASensor):
         # update both the state snapshot and the global state
         # (as bat_pwr is syntentic, not from the device)
         state.battery_charge_power = _bat_pwr
-        self._get_zencontrol(bc).update_state_value(self.field_name, _bat_pwr)
+        bc.device.update_value(self.field_name, _bat_pwr)

@@ -93,9 +93,8 @@ class HAPublisher:
 
         for haentity in HAENTITIES:
             # send initial discovery and initial availability.
-            state = self.bc.bridge.get_zendure_state()
             self.publish_ha_discovery(haentity)
-            self.publish_availability(haentity, state)
+            self.publish_availability(haentity, self.bc.device.state)
 
     def _on_publish(self,_client: mqtt.Client, _userdata: Any, mid: int) -> None:
         # Hack to get a "_is_ready" signal - tracking all discovery/availability

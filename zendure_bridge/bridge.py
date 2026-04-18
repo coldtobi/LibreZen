@@ -228,14 +228,3 @@ class ZendureBridge:
         if self.bc.config.zendure.get_all_properties_interval > 0:
             self._get_all_props_timer = threading.Timer(self.bc.config.zendure.get_all_properties_interval, self._get_all_properties)
             self._get_all_props_timer.start()
-
-
-    def update_state_value(self, field_name: str, value: int) -> None:
-        """ allows updating the state object with a new value, thread safe. """
-        assert self.bc.device is not None
-        self.bc.device.update_value(field_name, value)
-
-    def get_zendure_state(self) -> ZendureState:
-        """ get a (fresh) copy of the current state """
-        assert self.bc.device is not None
-        return self.bc.device.state

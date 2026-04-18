@@ -61,10 +61,10 @@ class HAAutoModelSelectControl(HASelectControl):
         # Use default values if not set (this functionality is debug/development only, as this whole class is only for development and testing purposes.)
         if autoModelProgram is None:
             autoModelProgram = 1
-            zencontrol.update_state_value("auto_model_program", 1)
+            bc.device.update_value("auto_model_program", 1)
         if autoModelValue is None:
             autoModelValue = 0
-            zencontrol.update_state_value("auto_model_value", 0)
+            bc.device.update_value("auto_model_value", 0)
 
         received = mqttpayload.decode()
         _keys = [ key for key,val in self.lookup.items() if val == received ]

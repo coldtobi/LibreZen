@@ -7,41 +7,17 @@
 # (at your option) any later version.
 
 from typing import Protocol, Any
-from abc import abstractmethod
-
-from zendure_bridge.device import ZendureState
-
 
 class ZendurePropertyWriter(Protocol):
     """ This protocol is to invoke writing a property / state to the Zendure device without the HAEntity needing to know the device object."""
-    @abstractmethod
     def write_property(self, propetries: dict[str, Any]) -> None:
         ...
 
-
 class ZendureCommandInvoker(Protocol):
-    @abstractmethod
     def invoke_function(self, arguments: dict[str, Any], function: str) -> None:
         ...
 
-
-class ZendureUpdateStateValue(Protocol):
-    """ This protocol is to allow updating a state into the global state object with thread safety."""
-    @abstractmethod
-    def update_state_value(self, field_name: str, value: int) -> None:
-        ...
-
-
-class ZendureCurrentStateProvider(Protocol):
-    """ This protocol gets a copy of the current ZendureState Object. """
-    @abstractmethod
-    def get_zendure_state(self) -> ZendureState:
-        ...
-
-
 class ZendureController(ZendurePropertyWriter,
                         ZendureCommandInvoker,
-                        ZendureUpdateStateValue,
-                        ZendureCurrentStateProvider,
                         Protocol):
     ...

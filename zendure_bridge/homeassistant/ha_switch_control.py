@@ -76,7 +76,7 @@ class HASwitchControl(HAControl):
                 self._get_zencontrol(bc).write_property(properties)
             else:
                 # update local state only
-                self._get_zencontrol(bc).update_state_value(self.field_name, value)
+                bc.device.update_value(self.field_name, value)
                 setattr(zenstate, self.field_name, value)
 
         except (AssertionError, ValueError) as e:
