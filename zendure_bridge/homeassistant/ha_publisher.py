@@ -30,7 +30,7 @@ class HAPublisher:
     """
     _bc: BridgeComponents
 
-    is_ready: bool = False # Connected to the HA Broker and sent all discoveries / availabilities -> we are ready to accept data.
+    _is_ready: bool = False # Connected to the HA Broker and sent all discoveries / availabilities -> we are ready to accept data.
 
     @property
     def _zencontrol(self) -> ZendureController:
@@ -78,9 +78,13 @@ class HAPublisher:
 
     def stop(self) -> None:
         logger.info("Shutting down")
-        self.is_ready = False
+        self._is_ready = False
         self._client.disconnect()
 
+
+    # ----------- #
+    # MQTT Client #
+    # ----------- #
 
     def _on_connect(self, client: mqtt.Client, _userdata: Any, _flags: Any, rc: int) -> None:
         assert self.bc.bridge is not None
@@ -100,41 +104,39 @@ class HAPublisher:
         for haentity in HAENTITIES:
             # send initial discovery and initial availability.
             self.publish_ha_discovery(haentity)
-            self.publish_availablity(haentity, self._zencontrol.get_zendure_state())
-
+            self.publish_availability(haentity, self._zencontrol.get_zendure_state())
 
     def _on_publish(self,_client: mqtt.Client, _userdata: Any, mid: int) -> None:
-        # Hack to get a "is_ready" signal - tracking all discovery/availability
+        # Hack to get a "_is_ready" signal - tracking all discovery/availability
         # publications and be ready when all has been sent.
         if mid in self.discovery_mid:
             self.discovery_mid.remove(mid)
-            if (not self.is_ready) and (not self.discovery_mid):
+            if (not self._is_ready) and (not self.discovery_mid):
                 logger.info("HAPublisher is now declared ready.")
-                self.is_ready = True
+                self._is_ready = True
 
     def _on_connect_fail(self, client: mqtt.Client, _userdata: Any) -> None:
         mqttconfig = self.bc.config.mqtt
         logger.warning("Connect to MQTT broker %s:%d failed.", mqttconfig.ha_broker, mqttconfig.ha_port)
         self.discovery_mid.clear()
 
-
     def _on_disconnect(self, client: mqtt.Client, _userdata: Any, rc: int) -> None:
         if rc != 0:
             logger.warning("Unexpected disconnect (rc=%d), paho will reconnect", rc)
-        self.is_ready = False
+        self._is_ready = False
         self.discovery_mid.clear()
-
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, message: mqtt.MQTTMessage) -> None:
         assert self.bc.device is not None
         topic = message.topic
+        state = self.bc.device.state
         for haent in HAENTITIES:
-            state = self.bc.device.state
             if isinstance(haent, HAControl) and topic == haent.get_command_topic(self._zencontrol):
                 haent.handle_command(message.payload, state, self._zencontrol)
                 return
 
         logger.warning("received unexpected topic: %s", topic)
+
 
     # ----------------#
     # Topic Managment #
@@ -156,9 +158,9 @@ class HAPublisher:
                 payload="",
                 retain=True)
 
-    # -------------#
-    # Topic States #
-    # -------------#
+    # -------------------------#
+    # Topic States / Protocols #
+    # -------------------------#
 
     def publish_state(self, haentity: HAEntity, state: ZendureState) -> None:
         """ publish the state (the value) of an entity """
@@ -170,8 +172,11 @@ class HAPublisher:
         logger.debug("sending state for %s to %s, value %s", haentity.name, topic, payload)
         self._client.publish(topic, payload, retain=True)
 
+    @property
+    def is_ready(self) -> bool:
+        return self._is_ready
 
-    def publish_availablity(self, haentity: HAEntity, state: ZendureState) -> None:
+    def publish_availability(self, haentity: HAEntity, state: ZendureState) -> None:
         """ publish availabiltiy of a state / control.
 
             availabilty will only be published if it has changed since the last time, or if always=True

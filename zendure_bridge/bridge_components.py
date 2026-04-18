@@ -12,15 +12,15 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .zendure_protocols import ZendureController
-    from .homeassistant.ha_publisher import HAPublisher
+    from .homeassistant.ha_publisher_protocols import HAPublisherProtocols
     from .device import ZendureDevice
     from zendure_bridge.config import BridgeConfig
 
 @dataclass
 class BridgeComponents:
-    
+
     config: BridgeConfig
     device: ZendureDevice | None = None
-    ha_publisher: HAPublisher | None = None
+    ha_publisher: HAPublisherProtocols | None = None
     bridge: ZendureController | None = None
 

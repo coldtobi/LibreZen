@@ -29,6 +29,7 @@ from .bridge_context import BridgeContext
 from .bridge_components import BridgeComponents
 
 from .homeassistant.ha_entities import HAENTITIES
+from .homeassistant.ha_publisher_protocols import HAPublisherProtocols
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,11 @@ class ZendureBridge:
         self.bc = bc
 
 
+    @property
+    def _ha_publisher(self) -> HAPublisherProtocols:
+        assert self.bc.ha_publisher is not None
+        return self.bc.ha_publisher
+
     # ------------------------------------------------------------------ #
     # Lifecycle                                                          #
     # ------------------------------------------------------------------ #
@@ -74,7 +80,6 @@ class ZendureBridge:
     def start(self) -> None:
         assert self.bc is not None
         assert self.bc.device is not None
-        assert self.bc.ha_publisher is not None
 
         # Subscribe pattern covering all device topics
         z = self.bc.config.zendure
@@ -119,11 +124,8 @@ class ZendureBridge:
         self.has_pending_changes = False  # invalidate stale data.
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, message: mqtt.MQTTMessage) -> None:
-        assert self.bc is not None
         assert self.bc.device is not None
-        assert self.bc.ha_publisher is not None
         device = self.bc.device
-        hapublisher = self.bc.ha_publisher
 
         topic = message.topic
         logger.debug("← %s (%d bytes)", topic, len(message.payload))
@@ -133,7 +135,7 @@ class ZendureBridge:
         state = device.state
 
         # defer processing if HAPublisher is not yet ready
-        if not hapublisher.is_ready and changed:
+        if not self._ha_publisher.is_ready and changed:
             logger.info("HAPublisher not yet ready -- defering processing updates.")
             self.has_pending_changes = True
             return
@@ -150,14 +152,14 @@ class ZendureBridge:
             # Publish changed haentity values to homeassistant.
             for haentity in HAENTITIES:
                 if haentity.has_changed(state):
-                    hapublisher.publish_state(haentity, state)
+                    self._ha_publisher.publish_state(haentity, state)
 
         # check if discoveries or availabilties needs updates.
         for haentity in HAENTITIES:
             if haentity.has_availability_changed(state, self):
-                hapublisher.publish_availablity(haentity, state)
+                self._ha_publisher.publish_availability(haentity, state)
             if haentity.needs_re_discovery:
-                hapublisher.publish_ha_discovery(haentity)
+                self._ha_publisher.publish_ha_discovery(haentity)
 
         self.has_pending_changes = False
 
@@ -190,6 +192,7 @@ class ZendureBridge:
             'properties': properties
         }
         self._client.publish(topic, json.dumps(payload,separators=(',', ':')))
+
 
     def invoke_function(self, arguments: dict[str, Any], function: str) -> None:
         """ Call the "invoke" RFC
