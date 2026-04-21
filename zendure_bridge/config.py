@@ -63,10 +63,27 @@ class HAConfig:
 
 
 @dataclass
+class NodeRedConfig:
+    """Configuration for the NodeRed MQTT publisher."""
+    enabled: bool = False
+    broker: str = ""
+    port: int = 1883
+    username: str = ""
+    password: str = ""
+    client_id: str = "zendure-bridge-nodered"
+    topic_prefix: str = "zendure"  # Topics: <prefix>/<device_id>/state/<field>
+
+    def __post_init__(self) -> None:
+        # If no broker configured, disable automatically
+        if not self.broker:
+            self.enabled = False
+
+@dataclass
 class BridgeConfig:
     mqtt: MqttConfig
     zendure: ZendureConfig
     homeassistant: HAConfig
+    nodered: NodeRedConfig
     log_level: str = "INFO"
     log_file: str | None = None
 
@@ -114,12 +131,24 @@ def load(path: str | Path = "config.yaml") -> BridgeConfig:
             expert_mode=ha_raw.get("expert_mode", False)
         )
 
+        nr_raw = raw.get("nodered", {})
+        nodered = NodeRedConfig(
+            enabled=nr_raw.get("enabled", False),
+            broker=nr_raw.get("broker", ""),
+            port=int(nr_raw.get("port", 1883)),
+            username=nr_raw.get("username", ""),
+            password=nr_raw.get("password", ""),
+            client_id=nr_raw.get("client_id", "zendure-bridge-nodered"),
+            topic_prefix=nr_raw.get("topic_prefix", "zendure"),
+        )
+
         log_raw = raw.get("logging", {})
 
         return BridgeConfig(
             mqtt=mqtt,
             zendure=zendure,
             homeassistant=ha,
+            nodered=nodered,
             log_level=log_raw.get("level", "INFO").upper(),
             log_file=log_raw.get("file"),
         )

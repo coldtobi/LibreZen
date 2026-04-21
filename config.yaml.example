@@ -38,6 +38,15 @@ homeassistant:
   # Expose "expert" MQTT controls.
   expert_mode: true
 
+nodered:
+  enabled: false
+  broker: "192.168.1.x"
+  port: 1883
+  username: "mqtt"
+  password: "changeme"
+  # client_id: "zendure-bridge-nodered"  # optional
+  # topic_prefix: "zendure"              # optional
+
 logging:
   # DEBUG, INFO, WARNING, ERROR
   level: "INFO"
