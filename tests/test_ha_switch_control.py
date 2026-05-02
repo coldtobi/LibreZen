@@ -6,14 +6,14 @@ import json
 
 
 def test_haswitch_get_discovery_topic() -> None:
-    sensor = HASwitchControl("TestSwitch", "buzzer_switch")
+    sensor = HASwitchControl("TestSwitch", "buzzer_switch", True, True)
     mock = BridgeMock()
     topic = sensor.get_discovery_topic(mock.bc)
     assert topic == "homeassistant_python_tests/switch/zendure_12345678_buzzer_switch/config"
 
 
 def test_haswitch_get_state_topic_and_command_topic() -> None:
-    sensor = HASwitchControl("TestSwitch", "buzzer_switch")
+    sensor = HASwitchControl("TestSwitch", "buzzer_switch", True, True)
     mock = BridgeMock()
     state_topic = sensor.get_state_topic(mock.bc)
     cmd_topic = sensor.get_command_topic(mock.bc)
@@ -22,7 +22,7 @@ def test_haswitch_get_state_topic_and_command_topic() -> None:
 
 
 def test_haswitch_get_ha_json_contains_payloads_and_command() -> None:
-    sensor = HASwitchControl("TestSwitch", "buzzer_switch")
+    sensor = HASwitchControl("TestSwitch", "buzzer_switch", True, True)
     mock = BridgeMock()
     result = json.loads(sensor.get_ha_json(mock.bc))
     # basic keys from HAEntity + command_topic and payloads
@@ -36,7 +36,7 @@ def test_haswitch_get_ha_json_contains_payloads_and_command() -> None:
 
 def test_haswitch_handle_command_synthetic_updates_state() -> None:
     # Synthetic controls should update only the local state via update_state_value
-    sensor = HASwitchControl("Master Switch", "master_switch", _is_synthetic=True)
+    sensor = HASwitchControl("Master Switch", "master_switch", True, True, _is_synthetic=True)
     mock = BridgeMock()
     zenstate = mock.get_zendure_state()
 
@@ -53,7 +53,7 @@ def test_haswitch_handle_command_synthetic_updates_state() -> None:
 
 def test_haswitch_handle_command_non_synthetic_writes_property() -> None:
     # Non-Synthetic controls should via write_properties.
-    sensor = HASwitchControl("Buzzer", "buzzer_switch", _is_synthetic=False)
+    sensor = HASwitchControl("Buzzer", "buzzer_switch", True, True, _is_synthetic=False)
     mock = BridgeMock()
     zenstate = mock.get_zendure_state()
 

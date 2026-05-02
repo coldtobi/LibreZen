@@ -14,21 +14,21 @@ import json
 
 
 def test_hanumber_get_discovery_topic() -> None:
-    sensor = HANumberControl("TestNumberControl", "solar_input_power", "W", 0, 100, 10, "power")
+    sensor = HANumberControl("TestNumberControl", "solar_input_power", True, True, "W", 0, 100, 10, "power")
     mock = BridgeMock()
     topic = sensor.get_discovery_topic(mock.bc)
     assert topic == "homeassistant_python_tests/number/zendure_12345678_solar_input_power/config"
 
 
 def test_hanumber_get_state_topic() -> None:
-    sensor = HANumberControl("TestNumberControl", "solar_input_power", "W", 0, 100, 10, "power")
+    sensor = HANumberControl("TestNumberControl", "solar_input_power", True, True, "W", 0, 100, 10, "power")
     mock = BridgeMock()
     topic = sensor.get_state_topic(mock.bc)
     assert topic == "homeassistant_python_tests/number/zendure_12345678_solar_input_power/state"
 
 
 def test_hanumber_get_ha_json() -> None:
-    sensor = HANumberControl("TestNumberControl", "solar_input_power", "W", 0, 100, 10, "power")
+    sensor = HANumberControl("TestNumberControl", "solar_input_power", True, True, "W", 0, 100, 10, "power")
     mock = BridgeMock()
     result = json.loads(sensor.get_ha_json(mock.bc))
     zen_device_id = mock.bc.config.zendure.device_id
@@ -55,7 +55,7 @@ def test_hanumber_get_ha_json() -> None:
 
 def test_hanumber_handle_command_synthetic_updates_state_only() -> None:
     # Synthetic controls should update only local device state and not call write_property
-    sensor = HANumberControl("TestNumberControl", "solar_input_power", "W", 0, 100, 10, "power", _is_synthetic=True)
+    sensor = HANumberControl("TestNumberControl", "solar_input_power", True, True, "W", 0, 100, 10, "power", _is_synthetic=True)
     mock = BridgeMock()
     zenstate = mock.get_zendure_state()
 
@@ -70,7 +70,7 @@ def test_hanumber_handle_command_synthetic_updates_state_only() -> None:
 
 def test_hanumber_handle_command_non_synthetic_writes_property() -> None:
     # Non-synthetic controls should write properties via the zencontroller
-    sensor = HANumberControl("TestNumberControl", "solar_input_power", "W", 0, 100, 10, "power", _is_synthetic=False)
+    sensor = HANumberControl("TestNumberControl", "solar_input_power", True, True, "W", 0, 100, 10, "power", _is_synthetic=False)
     mock = BridgeMock()
     zenstate = mock.get_zendure_state()
 

@@ -15,21 +15,21 @@ import json
 
 
 def test_sensor_get_discovery_topic() -> None:
-    sensor = HASensor("TestSensor", "solar_input_power", "W", "power")
+    sensor = HASensor("TestSensor", "solar_input_power", True, True, "W", "power")
     mock = BridgeMock()
     topic = sensor.get_discovery_topic(mock.bc)
     assert topic == "homeassistant_python_tests/sensor/zendure_12345678_solar_input_power/config"
 
 
 def test_sensor_get_state_topic() -> None:
-    sensor = HASensor("TestSensor", "solar_input_power", "W", "power")
+    sensor = HASensor("TestSensor", "solar_input_power", True, True, "W", "power")
     mock = BridgeMock()
     topic = sensor.get_state_topic(mock.bc)
     assert topic == "homeassistant_python_tests/sensor/zendure_12345678_solar_input_power/state"
 
 
 def test_sensor_get_ha_json() -> None:
-    sensor = HASensor("TestSensor", "solar_input_power", "W", "power")
+    sensor = HASensor("TestSensor", "solar_input_power", True, True, "W", "power")
     mock = BridgeMock()
     zen_device_id = mock.bc.config.zendure.device_id
 
@@ -51,7 +51,7 @@ def test_sensor_get_ha_json() -> None:
 
 def test_sensor_get_value() -> None:
     # Arrange
-    sensor = HASensor("Solar", "solar_input_power", "W", "power")
+    sensor = HASensor("Solar", "solar_input_power", True, True, "W", "power")
     state = ZendureState()
     state.solar_input_power = 42
 
@@ -62,7 +62,7 @@ def test_sensor_get_value() -> None:
 
 def test_sensor_has_changed_first_check() -> None:
     # Arrange
-    sensor = HASensor("Solar", "solar_input_power", "W", "power")
+    sensor = HASensor("Solar", "solar_input_power", True, True, "W", "power")
     state = ZendureState()
 
     # Act & Assert
@@ -78,7 +78,7 @@ def test_sensor_has_changed_first_check() -> None:
 
 def test_sensor_has_changed() -> None :
     # Arrange
-    sensor = HASensor("Solar", "solar_input_power", "W", "power")
+    sensor = HASensor("Solar", "solar_input_power", True, True, "W", "power")
     state = ZendureState()
     state.solar_input_power = 42
 

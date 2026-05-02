@@ -15,7 +15,7 @@ from .bridge_mock import BridgeMock
 
 def test_generate_invoke_parameters_contains_camelcase_keys() -> None:
     # Use the control's default lookup (should reflect device mapping)
-    ctrl = HAAutoModelSelectControl("AutoModel", "auto_model", lookup = _PROPERTY_MAP_AUTO_MODELS)
+    ctrl = HAAutoModelSelectControl("AutoModel", "auto_model", True, True, lookup = _PROPERTY_MAP_AUTO_MODELS)
     params = ctrl._generate_invoke_parameters(automodelprogram=2, automodel=9, automodelvalue=1794)
 
     assert params["autoModelProgram"] == 2
@@ -26,7 +26,7 @@ def test_generate_invoke_parameters_contains_camelcase_keys() -> None:
 
 def test_handle_command_invokes_deviceAutomation() -> None:
     # Use the control's default lookup coming from device mapping
-    ctrl = HAAutoModelSelectControl("AutoModel", "auto_model", lookup = _PROPERTY_MAP_AUTO_MODELS)
+    ctrl = HAAutoModelSelectControl("AutoModel", "auto_model", True, True, lookup = _PROPERTY_MAP_AUTO_MODELS)
 
     state = ZendureState()
     # ensure program/value are None so handle_command will set defaults

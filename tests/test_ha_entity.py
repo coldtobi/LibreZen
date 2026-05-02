@@ -15,7 +15,7 @@ def test_override_is_synthetic_property_in_subclass_affects_availability() -> No
         def is_synthetic(self) -> bool:
             return True
 
-    d = Derived("Derived", "master_switch")
+    d = Derived("Derived", "master_switch", True, True)
     state = ZendureState()
     mock = BridgeMock()
 
@@ -32,7 +32,7 @@ def test_default_is_synthetic_false() -> None:
             return "test"
 
     # use an actual ZendureState field name so get_value() can safely access it
-    m = Minimal("m", "master_switch")
+    m = Minimal("m", "master_switch", True, True)
     state = ZendureState()
     mock = BridgeMock()
     assert m.is_synthetic is False
@@ -46,7 +46,7 @@ def test_get_value_display_and_has_changed_behavior() -> None:
         def ha_component_type(self) -> str:
             return "test"
 
-    d = Derived("Derived", "solar_input_power")
+    d = Derived("Derived", "solar_input_power", True, True)
     state = ZendureState()
 
     # initial value not set -> get_value returns None and has_changed is False
@@ -70,7 +70,7 @@ def test_has_availability_changed_transitions() -> None:
         def ha_component_type(self) -> str:
             return "test"
 
-    d = Derived("Derived", "solar_input_power")
+    d = Derived("Derived", "solar_input_power", True, True)
     state = ZendureState()
     mock = BridgeMock()
 

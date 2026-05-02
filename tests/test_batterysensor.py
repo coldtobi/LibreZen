@@ -14,7 +14,7 @@ from zendure_bridge.homeassistant.ha_battery_sensor import BatterySensor
 def test_batterysensor_update() -> None:
     # Arrange
     bm = BridgeMock()
-    sensor = BatterySensor("Battery Charge Power", "battery_charge_power", "W", "power")
+    sensor = BatterySensor("Battery Charge Power", "battery_charge_power", True, True, "W", "power")
     state = bm.bc.device.state
     state.pack_input_power = 0
     state.output_pack_power = 0
