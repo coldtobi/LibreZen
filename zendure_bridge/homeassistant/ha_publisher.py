@@ -140,13 +140,53 @@ class HAPublisher:
             retain=True)
         self.discovery_mid.append(mid.mid)
 
+    # ------------------------------#
+    # Uninstallation / Reset Helper #
+    # ------------------------------#
+
     # Hilfsmethode um topics wieder im homeassistant zu löschen. muss vor dem umbennen aufgerufen werden.
-    def unpublish_discoveries(self) -> None:
-        for sensor in HAENTITIES:
-            self._client.publish(
-                sensor.get_discovery_topic(self._bc),
-                payload="",
-                retain=True)
+    def unpublish(self) -> int:
+        """ This method unregisteres all entities from homeassistant.
+
+        This can be used as a convience function e.g to facilitate entity renames.
+        """
+        import socket
+        import ssl
+        import paho.mqtt.publish as publish
+
+        logger.warn("Unregistering from homeassstant.")
+        mqttconfig = self._bc.config.mqtt
+        msgs : list[dict[str, str]] = []
+        for haent in HAENTITIES:
+            topic = haent.get_discovery_topic(self._bc)
+            msgs.append({'topic': topic, 'payload': ""})
+
+        # connect and send the "empty" discoveries to make homeassistant forget the entities.
+        try:
+            publish.multiple(msgs, # type: ignore
+                             hostname=mqttconfig.ha_broker,
+                             port=mqttconfig.ha_port,
+                             auth={'username': mqttconfig.ha_username,
+                                   'password': mqttconfig.ha_password})
+            logger.warn("Unregistering from homeassstant completed.")
+            return 0
+
+        except (socket.error, ConnectionError) as net_err:
+            logger.error(f"Network error: Broker at {mqttconfig.ha_broker} is unreachable. {net_err}")
+
+        except ssl.SSLError as ssl_err:
+            logger.error(f"SSL/TLS handshake failed: {ssl_err}")
+
+        except ValueError as val_err:
+            logger.error(f"Invalid MQTT parameters (likely a malformed topic or payload): {val_err}")
+
+        except Exception as e:
+            # Catch-all for unexpected issues like auth failures or library bugs
+            logger.exception(f"An unexpected error occurred while publishing to MQTT: {e}")
+
+        finally:
+            return 1
+
 
     # -------------------------#
     # Topic States / Protocols #

@@ -31,6 +31,9 @@ def main() -> None:
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
+    parser.add_argument(
+        "--unpublish", action="store_true", default=False, help="Unpublish all Homeassistant entities, then exit.")
+
     args = parser.parse_args()
 
     try:
@@ -53,6 +56,9 @@ def main() -> None:
 
     signal.signal(signal.SIGINT, _signal_handler)
     signal.signal(signal.SIGTERM, _signal_handler)
+
+    if args.unpublish:
+        sys.exit(ha_publisher.unpublish())
 
     bridge.start()
     ha_publisher.start()
