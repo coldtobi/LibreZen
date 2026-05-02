@@ -20,6 +20,7 @@
 import logging
 
 from dataclasses import dataclass
+from typing import Any
 
 from .ha_select_control import HASelectControl
 
@@ -42,6 +43,12 @@ class HAAutoModelSelectControl(HASelectControl):
         (the control might still be made available for the experienced user wanting to do the control
         loop entirely in homeassistant.
     """
+
+    def _build_ha_discovery_dict(self, bc: BridgeComponents) -> dict[str, Any]:
+        _dict = super()._build_ha_discovery_dict(bc)
+        _dict['enabled_by_default'] = "false"
+        return _dict
+
     def _generate_invoke_parameters(self, automodelprogram:int, automodel:int, automodelvalue:int) -> dict[str, int]:
         arguments : dict[str,int] = {}
         # Note: currently only "0" "8" and "9" implemented.
