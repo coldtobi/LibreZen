@@ -101,6 +101,11 @@ class HAEntity:
                 "model": haconfig.model_name,
             }
         }
+
+        # expert settings should not be enabled in homeassistant by default.
+        if self.is_expert:
+          _dict['enabled_by_default'] = "false"
+
         return _dict
 
     def update(self, state: ZendureState, bc: BridgeComponents) -> None:
