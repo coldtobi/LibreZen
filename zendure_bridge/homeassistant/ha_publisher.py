@@ -31,7 +31,7 @@ class HAPublisher:
     _is_ready: bool = False # Connected to the HA Broker and sent all discoveries / availabilities -> we are ready to accept data.
 
     def __init__(self, bc: BridgeComponents) -> None:
-        self.bc = bc
+        self._bc : BridgeComponents = bc
         # mqttconfig: MqttConfig, zendevice: ZendureDevice, zencontrol: ZendureController ) -> None:
 
 
@@ -40,7 +40,7 @@ class HAPublisher:
     # ----------#
 
     def start(self) -> None:
-        mqttconfig = self.bc.config.mqtt
+        mqttconfig = self._bc.config.mqtt
         logger.info("connecting to homeassistant mqtt broker at %s ", mqttconfig.ha_broker)
 
         # keeping track of discovery / availability sent, to judge whether we are ready.
@@ -59,8 +59,8 @@ class HAPublisher:
         self._subscribe_topics: list[str] = []
         for haent in HAENTITIES:
             if isinstance(haent, HAControl) :
-                logger.info("command_topic: %s" , str(haent.get_command_topic(self.bc)))
-                self._subscribe_topics.append(haent.get_command_topic(self.bc))
+                logger.info("command_topic: %s" , str(haent.get_command_topic(self._bc)))
+                self._subscribe_topics.append(haent.get_command_topic(self._bc))
 
         self._client.loop_start()
         self._client.connect_async(mqttconfig.ha_broker, mqttconfig.ha_port)
@@ -77,8 +77,8 @@ class HAPublisher:
     # ----------- #
 
     def _on_connect(self, client: mqtt.Client, _userdata: Any, _flags: Any, rc: int) -> None:
-        assert self.bc.bridge is not None
-        mqttconfig = self.bc.config.mqtt
+        assert self._bc.bridge is not None
+        mqttconfig = self._bc.config.mqtt
 
         self.discovery_mid.clear()
         if rc != 0:
@@ -94,7 +94,7 @@ class HAPublisher:
         for haentity in HAENTITIES:
             # send initial discovery and initial availability.
             self.publish_ha_discovery(haentity)
-            self.publish_availability(haentity, self.bc.device.state)
+            self.publish_availability(haentity, self._bc.device.state)
 
     def _on_publish(self,_client: mqtt.Client, _userdata: Any, mid: int) -> None:
         # Hack to get a "_is_ready" signal - tracking all discovery/availability
@@ -106,7 +106,7 @@ class HAPublisher:
                 self._is_ready = True
 
     def _on_connect_fail(self, client: mqtt.Client, _userdata: Any) -> None:
-        mqttconfig = self.bc.config.mqtt
+        mqttconfig = self._bc.config.mqtt
         logger.warning("Connect to MQTT broker %s:%d failed.", mqttconfig.ha_broker, mqttconfig.ha_port)
         self.discovery_mid.clear()
 
@@ -117,12 +117,12 @@ class HAPublisher:
         self.discovery_mid.clear()
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, message: mqtt.MQTTMessage) -> None:
-        assert self.bc.device is not None
+        assert self._bc.device is not None
         topic = message.topic
-        state = self.bc.device.state
+        state = self._bc.device.state
         for haent in HAENTITIES:
-            if isinstance(haent, HAControl) and topic == haent.get_command_topic(self.bc):
-                haent.handle_command(message.payload, state, self.bc)
+            if isinstance(haent, HAControl) and topic == haent.get_command_topic(self._bc):
+                haent.handle_command(message.payload, state, self._bc)
                 return
 
         logger.warning("received unexpected topic: %s", topic)
@@ -135,8 +135,8 @@ class HAPublisher:
     def publish_ha_discovery(self, haentity: HAEntity) -> None:
         logger.info("sending discovery for %s", haentity.name)
         mid = self._client.publish(
-            haentity.get_discovery_topic(self.bc),
-            haentity.get_ha_json(self.bc),
+            haentity.get_discovery_topic(self._bc),
+            haentity.get_ha_json(self._bc),
             retain=True)
         self.discovery_mid.append(mid.mid)
 
@@ -144,7 +144,7 @@ class HAPublisher:
     def unpublish_discoveries(self) -> None:
         for sensor in HAENTITIES:
             self._client.publish(
-                sensor.get_discovery_topic(self.bc),
+                sensor.get_discovery_topic(self._bc),
                 payload="",
                 retain=True)
 
@@ -158,7 +158,7 @@ class HAPublisher:
         if payload is None:
             logger.debug("skipping state publish for %s, value is None", haentity.name)
             return
-        topic = haentity.get_state_topic(self.bc)
+        topic = haentity.get_state_topic(self._bc)
         logger.debug("sending state for %s to %s, value %s", haentity.name, topic, payload)
         self._client.publish(topic, payload, retain=True)
 
@@ -171,8 +171,8 @@ class HAPublisher:
 
             availabilty will only be published if it has changed since the last time, or if always=True
         """
-        topic = haentity.get_availabilty_topic(self.bc)
-        payload = "online" if haentity.is_available(state, self.bc) else "offline"
+        topic = haentity.get_availabilty_topic(self._bc)
+        payload = "online" if haentity.is_available(state, self._bc) else "offline"
         logger.debug("Availabilty for %s is now %s", haentity.name, payload)
         mid = self._client.publish(topic, payload, retain=True)
         self.discovery_mid.append(mid.mid)
