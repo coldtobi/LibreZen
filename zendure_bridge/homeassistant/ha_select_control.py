@@ -20,11 +20,25 @@ class HASelectControl(HAControl):
         Infos for the Control: https://www.home-assistant.io/integrations/select.mqtt/
     """
 
+
     lookup: dict[int, str]
 
     @property
     def ha_component_type(self) -> str:
         return "select"
+
+
+    _is_expert: bool = False      # expert settings are only sent to homeassistant if enabled in config.
+    _is_synthetic: bool = False   # not a property of the zendure device, so don't send it to it.
+
+    @property
+    def is_expert(self) -> bool:
+        return self._is_expert
+
+    @property
+    def is_synthetic(self) -> bool:
+        return self._is_synthetic
+
 
     def get_display_value(self, state:ZendureState) -> str | None:
         numeric_value = self.get_value(state)

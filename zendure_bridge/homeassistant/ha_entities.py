@@ -52,7 +52,7 @@ HAENTITIES = [
     HASensor("Current Inverter Limit",      "inverse_max_power",   True, True , "W",                    "power"),
     HASoCControl("min SoC",                 "min_soc",             True, True , "%",    0,  50,     1,  "battery"),
     HASoCControl("max SoC",                 "soc_set",             True, True , "%",   70, 100,     1,  "battery"),
-    HAAutoMmodeSelCtrl("Auto Model Ctrl",   "auto_model",          True, True , _PROPERTY_MAP_AUTO_MODELS),
+    HAAutoMmodeSelCtrl("Auto Model Ctrl",   "auto_model",          True, True , _PROPERTY_MAP_AUTO_MODELS, _is_expert=True),
     HASwitchControl("Master Switch",        "master_switch",       True, True ),
     HASwitchControl("Buzzer Switch",        "buzzer_switch",       True, True ),
 
