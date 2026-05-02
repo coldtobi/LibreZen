@@ -58,7 +58,7 @@ class HAPublisher:
         # Subscribe pattern covering all device topics which can command things
         self._subscribe_topics: list[str] = []
         for haent in HAENTITIES:
-            if isinstance(haent, HAControl) :
+            if haent.publish_to_ha and isinstance(haent, HAControl):
                 logger.info("command_topic: %s" , str(haent.get_command_topic(self._bc)))
                 self._subscribe_topics.append(haent.get_command_topic(self._bc))
 
@@ -91,9 +91,10 @@ class HAPublisher:
             client.subscribe(topic)
 
         for haentity in HAENTITIES:
-            # send initial discovery and initial availability.
-            self.publish_ha_discovery(haentity)
-            self.publish_availability(haentity, self._bc.device.state)
+            if haentity.publish_to_ha:
+              # send initial discovery and initial availability.
+              self.publish_ha_discovery(haentity)
+              self.publish_availability(haentity, self._bc.device.state)
 
     def _on_publish(self,_client: mqtt.Client, _userdata: Any, mid: int) -> None:
         # Hack to get a "_is_ready" signal - tracking all discovery/availability
@@ -119,7 +120,7 @@ class HAPublisher:
         topic = message.topic
         state = self._bc.device.state
         for haent in HAENTITIES:
-            if isinstance(haent, HAControl) and topic == haent.get_command_topic(self._bc):
+            if haent.publish_to_ha and isinstance(haent, HAControl) and topic == haent.get_command_topic(self._bc):
                 haent.handle_command(message.payload, state, self._bc)
                 return
 
@@ -131,6 +132,7 @@ class HAPublisher:
     # ----------------#
 
     def publish_ha_discovery(self, haentity: HAEntity) -> None:
+        assert haentity.publish_to_ha, f"Trying to send discovery for entity {haentity.name} not meant for homeasstant!"
         logger.info("sending discovery for %s", haentity.name)
         mid = self._client.publish(
             haentity.get_discovery_topic(self._bc),
@@ -152,6 +154,8 @@ class HAPublisher:
 
     def publish_state(self, haentity: HAEntity, state: ZendureState) -> None:
         """ publish the state (the value) of an entity """
+        if not haentity.publish_to_ha:
+            return
         payload = haentity.get_display_value(state)
         if payload is None:
             logger.debug("skipping state publish for %s, value is None", haentity.name)
@@ -169,6 +173,8 @@ class HAPublisher:
 
             availabilty will only be published if it has changed since the last time, or if always=True
         """
+        if not haentity.publish_to_ha:
+            return
         topic = haentity.get_availabilty_topic(self._bc)
         payload = "online" if haentity.is_available(state, self._bc) else "offline"
         logger.debug("Availabilty for %s is now %s", haentity.name, payload)
