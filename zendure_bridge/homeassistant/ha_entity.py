@@ -65,19 +65,19 @@ class HAEntity:
         """ generate JSON to advertise the HAEntity to homassistant. """
         return json.dumps(self._build_ha_discovery_dict(bc))
 
-    def get_state_topic(self, bc: BridgeComponents) -> str:
+    def get_ha_state_topic(self, bc: BridgeComponents) -> str:
         """ generate mqtt topic string for homeassistant to publish a state """
         haconfig = bc.config.homeassistant
         zenconfig = bc.config.zendure
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/state"
 
-    def get_discovery_topic(self, bc: BridgeComponents) -> str:
+    def get_ha_discovery_topic(self, bc: BridgeComponents) -> str:
         """ generate mqtt topic string for homeassistant to publish a discovery topic. """
         haconfig = bc.config.homeassistant
         zenconfig = bc.config.zendure
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/config"
 
-    def get_availabilty_topic(self, bc: BridgeComponents) -> str:
+    def get_ha_availabilty_topic(self, bc: BridgeComponents) -> str:
         haconfig = bc.config.homeassistant
         zenconfig = bc.config.zendure
         return f"{haconfig.discovery_prefix}/{self.ha_component_type}/zendure_{zenconfig.device_id}_{self.field_name}/availability"
@@ -92,8 +92,8 @@ class HAEntity:
 
         _dict = {
             'name': self.name,
-            'state_topic': self.get_state_topic(bc),
-            'availability_topic': self.get_availabilty_topic(bc),
+            'state_topic': self.get_ha_state_topic(bc),
+            'availability_topic': self.get_ha_availabilty_topic(bc),
             'unique_id': f"zendure_{zenconfig.device_id}_{self.field_name}",
             'device': {
                 "identifiers": [f"zendure_{zenconfig.device_id}"],
@@ -102,9 +102,9 @@ class HAEntity:
             }
         }
 
-        # expert settings should not be enabled in homeassistant by default.
+        # expert settings are not enabled in homeassistant by default.
         if self.is_expert:
-          _dict['enabled_by_default'] = "false"
+            _dict['enabled_by_default'] = "false"
 
         return _dict
 

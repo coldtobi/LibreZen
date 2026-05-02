@@ -135,7 +135,7 @@ class HAPublisher:
         assert haentity.publish_to_ha, f"Trying to send discovery for entity {haentity.name} not meant for homeasstant!"
         logger.info("sending discovery for %s", haentity.name)
         mid = self._client.publish(
-            haentity.get_discovery_topic(self._bc),
+            haentity.get_ha_discovery_topic(self._bc),
             haentity.get_ha_json(self._bc),
             retain=True)
         self.discovery_mid.append(mid.mid)
@@ -158,7 +158,7 @@ class HAPublisher:
         mqttconfig = self._bc.config.mqtt
         msgs : list[dict[str, str]] = []
         for haent in HAENTITIES:
-            topic = haent.get_discovery_topic(self._bc)
+            topic = haent.get_ha_discovery_topic(self._bc)
             msgs.append({'topic': topic, 'payload': ""})
 
         # connect and send the "empty" discoveries to make homeassistant forget the entities.
@@ -200,7 +200,7 @@ class HAPublisher:
         if payload is None:
             logger.debug("skipping state publish for %s, value is None", haentity.name)
             return
-        topic = haentity.get_state_topic(self._bc)
+        topic = haentity.get_ha_state_topic(self._bc)
         logger.debug("sending state for %s to %s, value %s", haentity.name, topic, payload)
         self._client.publish(topic, payload, retain=True)
 
@@ -215,7 +215,7 @@ class HAPublisher:
         """
         if not haentity.publish_to_ha:
             return
-        topic = haentity.get_availabilty_topic(self._bc)
+        topic = haentity.get_ha_availabilty_topic(self._bc)
         payload = "online" if haentity.is_available(state, self._bc) else "offline"
         logger.debug("Availabilty for %s is now %s", haentity.name, payload)
         mid = self._client.publish(topic, payload, retain=True)

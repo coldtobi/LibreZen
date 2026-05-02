@@ -8,14 +8,14 @@ import json
 def test_haswitch_get_discovery_topic() -> None:
     sensor = HASwitchControl("TestSwitch", "buzzer_switch", True, True)
     mock = BridgeMock()
-    topic = sensor.get_discovery_topic(mock.bc)
+    topic = sensor.get_ha_discovery_topic(mock.bc)
     assert topic == "homeassistant_python_tests/switch/zendure_12345678_buzzer_switch/config"
 
 
 def test_haswitch_get_state_topic_and_command_topic() -> None:
     sensor = HASwitchControl("TestSwitch", "buzzer_switch", True, True)
     mock = BridgeMock()
-    state_topic = sensor.get_state_topic(mock.bc)
+    state_topic = sensor.get_ha_state_topic(mock.bc)
     cmd_topic = sensor.get_command_topic(mock.bc)
     assert state_topic == "homeassistant_python_tests/switch/zendure_12345678_buzzer_switch/state"
     assert cmd_topic == "homeassistant_python_tests/switch/zendure_12345678_buzzer_switch/set"
@@ -27,8 +27,8 @@ def test_haswitch_get_ha_json_contains_payloads_and_command() -> None:
     result = json.loads(sensor.get_ha_json(mock.bc))
     # basic keys from HAEntity + command_topic and payloads
     assert result["name"] == "TestSwitch"
-    assert result["state_topic"] == sensor.get_state_topic(mock.bc)
-    assert result["availability_topic"] == sensor.get_availabilty_topic(mock.bc)
+    assert result["state_topic"] == sensor.get_ha_state_topic(mock.bc)
+    assert result["availability_topic"] == sensor.get_ha_availabilty_topic(mock.bc)
     assert result["command_topic"] == sensor.get_command_topic(mock.bc)
     assert result["payload_on"] == sensor.payload_on
     assert result["payload_off"] == sensor.payload_off
