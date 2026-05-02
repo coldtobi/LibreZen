@@ -21,8 +21,13 @@ from zendure_bridge.zendure_protocols import ZendureController
 class HAEntity:
     """ Baseclass for HA entities, like sensors and control items. """
 
+
     name: str            # human readable caption for Homeassistant.
     field_name: str      # fiels of the dataclass ZendureState-Feldname, including for synthetic, derived sensors or controls.
+
+    _publish_to_ha: bool         # This entity is for / controled by homeassistant
+    _publish_to_nodered: bool    # This entity is for / controled by NodeRED
+
 
     _last_availability: bool = field(default=True, init=False) # for the change detection of the availability.
 
@@ -41,6 +46,16 @@ class HAEntity:
     def is_synthetic(self) -> bool:
         ''' A synthetic Entity is not backed up by the Zendure Device, it is manufactored in this programm. '''
         return False
+
+    @property
+    def publish_to_ha(self) -> bool:
+        ''' This Entity should be made known to Homeassistant '''
+        return self._publish_to_ha
+
+    @property
+    def publish_to_nodered(self) -> bool:
+        ''' This Entity's state should be sent to NodeRed - and if a HAControl controlled by it. '''
+        return self._publish_to_nodered
 
     def _get_zencontrol(self, bc: BridgeComponents) -> ZendureController:
         assert bc.bridge is not None
