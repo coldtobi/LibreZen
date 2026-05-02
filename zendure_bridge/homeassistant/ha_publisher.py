@@ -7,6 +7,8 @@
 # (at your option) any later version.
 
 import logging
+logger = logging.getLogger(__name__)
+
 from typing import Any
 
 import paho.mqtt.client as mqtt
@@ -18,7 +20,6 @@ from .ha_entities import HAENTITIES
 from ..device import ZendureState
 from ..bridge_components import BridgeComponents
 
-logger = logging.getLogger(__name__)
 
 class HAPublisher:
     """Homeassistent MQTT Publisher
@@ -32,7 +33,6 @@ class HAPublisher:
 
     def __init__(self, bc: BridgeComponents) -> None:
         self._bc : BridgeComponents = bc
-        # mqttconfig: MqttConfig, zendevice: ZendureDevice, zencontrol: ZendureController ) -> None:
 
 
     # ----------#
@@ -77,7 +77,6 @@ class HAPublisher:
     # ----------- #
 
     def _on_connect(self, client: mqtt.Client, _userdata: Any, _flags: Any, rc: int) -> None:
-        assert self._bc.bridge is not None
         mqttconfig = self._bc.config.mqtt
 
         self.discovery_mid.clear()
@@ -117,7 +116,6 @@ class HAPublisher:
         self.discovery_mid.clear()
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, message: mqtt.MQTTMessage) -> None:
-        assert self._bc.device is not None
         topic = message.topic
         state = self._bc.device.state
         for haent in HAENTITIES:

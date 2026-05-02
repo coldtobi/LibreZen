@@ -15,9 +15,14 @@ from ..bridge_components import BridgeComponents
 
 @dataclass
 class HAAutoModelValueControl(HANumberControl):
+    ''' AutoModelValue is so to say the parameter for the AutoModel automation.
+
+    When this value is updated, we need to invoke the logic from HAAutoModelSelectControl
+    to send the new value to the device.
+    '''
 
     def handle_command(self, mqttpayload:bytes, zenstate:ZendureState, bc: BridgeComponents) -> None:
-        """ call invoke function for the device automatin "automodel" 
+        """ call invoke function for the device automation "automodel"
 
             implemented only for autoModel 8 and 9.
         """
@@ -41,7 +46,7 @@ class HAAutoModelValueControl(HANumberControl):
         from .ha_entities import find_sensor_objs
         from .ha_auto_model_select_control import HAAutoModelSelectControl
         ents = find_sensor_objs("auto_model", HAAutoModelSelectControl)
-        assert ents, "Cannot find output_limit entity."
+        assert ents, "Cannot find auto_model entity."
         ha_amsctrl = cast(HAAutoModelSelectControl, ents[0])
         # autoModel has been checked above to be 8 or 9; assert its type to
         # help the type checker and then pass ints to the helper.

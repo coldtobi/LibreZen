@@ -32,7 +32,11 @@ logger = logging.getLogger(__name__)
 class HAAutoModelSelectControl(HASelectControl):
     """ MQTT Select Control for the "autoModel" property.
 
-        Note: This control is only for development and testing purposes, as the
+        This allows incvoking the different "autoModel" deviceAutomation programms as
+        defined in _PROPERTY_MAP_AUTO_MODELS. The control value is set by the AutoModelValue property,
+        see HAAutoModelValueControl.
+
+        This control is only closed-loop-control, development and testing purposes, as the
         autoModel property is not intended to be set by the user. The underlaying deviceAutomation feature
         needs constant updating of its autoModelValue, not really suitable for (manual) user interaction.
         (the control might still be made available for the experienced user wanting to do the control

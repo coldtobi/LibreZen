@@ -34,10 +34,12 @@ class HAEntity:
 
     @property
     def is_expert(self) -> bool:
+        ''' Expert-Settings cannot be controled by homeassistant if the expert mode is off. '''
         return False
 
     @property
     def is_synthetic(self) -> bool:
+        ''' A synthetic Entity is not backed up by the Zendure Device, it is manufactored in this programm. '''
         return False
 
     def _get_zencontrol(self, bc: BridgeComponents) -> ZendureController:

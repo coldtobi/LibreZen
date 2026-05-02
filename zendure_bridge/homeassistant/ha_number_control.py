@@ -28,7 +28,7 @@ class HANumberControl(HAControl):
     device_class: str   # HA device_class: "power", "battery", "energy"
     display_mode: str = "auto"    # "auto", "box" or "slider"
 
-    _is_expert: bool = False
+    _is_expert: bool = False      # expert settings are only sent to homeassistant if enabled in config.
     _is_synthetic: bool = False   # not a property of the zendure device, so don't send it to it.
 
 
